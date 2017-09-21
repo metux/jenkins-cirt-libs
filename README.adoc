@@ -1,0 +1,4 @@
+CI-RT jenkins pipeline library repository
+=========================================
+
+This repository contain the CI-RT Jenkins pipeline library functions.
