@@ -27,9 +27,18 @@ def runShellScript(String name) {
 def runShellScript(String name, String args) {
 	script = loadShellScript(name);
 	println "Running shell script \"${name}\""
-	withEnv(environment.collect { k,v -> return "${k}=${v}" }) {
-		sh "${script} ${args}";
+	try {
+		withEnv(environment.collect { k,v -> return "${k}=${v}" }) {
+			sh "${script} ${args}";
+		}
+	} catch(Exception ex) {
+		println("shell script \"${name}\" failed:");
+		println(ex.toString());
+		println(ex.getMessage());
+		println(ex.getStackTrace());
+		error("shell script \"${name}\" failed.");
 	}
+	println "Finish shell script \"${name}\""
 }
 
 def extraEnv(String k, String v) {
