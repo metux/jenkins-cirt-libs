@@ -8,10 +8,10 @@ package de.linutronix.cirt;
 import de.linutronix.cirt.inputcheck;
 
 private boottestJob(Map global, String boottest) {
-	return {
+	//return {
 		println("Running boottest ${boottest}");
 		boottestRunner(global, boottest);
-	}
+	//}
 }
 
 private runboottest(Map global, String[] boottests) {
@@ -24,11 +24,12 @@ private runboottest(Map global, String[] boottests) {
 		helper = new helper();
 		helper.add2environment(properties);
 
-		def jobName = "Boottest ${boottest}";
-		stepsForParallel[jobName] = boottestJob(global, "${boottest}");
+		//def jobName = "Boottest ${boottest}";
+		//stepsForParallel[jobName] =
+		boottestJob(global, "${boottest}");
 	};
 
-	parallel(stepsForParallel);
+	//parallel(stepsForParallel);
 }
 
 def call(Map global, String[] boottests) {
