@@ -5,15 +5,26 @@
 
 package de.linutronix.cirt;
 
-def call(Map global, String target, String kernel) {
-	node(target) {
-		println("Run target preperation for ${kernel}");
-		deleteDir();
-		unstash(kernel.replaceAll('/','_'));
+import de.linutronix.cirt.inputcheck;
 
-		helper = new helper();
-		helper.extraEnv("SCHEDULER_ID", env.BUILD_NUMBER);
-		helper.runShellScript("targetprep/preperation.sh");
+def call(Map global, String target, String kernel) {
+	try {
+		inputcheck.check(global);
+		node(target) {
+			println("Run target preperation for ${kernel}");
+			deleteDir();
+			unstash(kernel.replaceAll('/','_'));
+
+			helper = new helper();
+			helper.extraEnv("SCHEDULER_ID", env.BUILD_NUMBER);
+			helper.runShellScript("targetprep/preperation.sh");
+		}
+	} catch(Exception ex) {
+		println("targetprep ${kernel} on ${target} failed:");
+		println(ex.toString());
+		println(ex.getMessage());
+		println(ex.getStackTrace());
+		error("targetprep ${kernel} on ${target} failed:");
 	}
 }
 
