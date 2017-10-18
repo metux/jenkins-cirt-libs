@@ -32,7 +32,15 @@ def call(String target, String cyclictest, String interval, String limit,
 
 	println("cyclictest-runner: ${target} ${cyclictest} ${interval} ${limit}\n${loadgen}");
 
-        node(target) {
-		runner(cyclictest, interval, limit, loadgen);
-        }
+	node(target) {
+		try {
+			runner(cyclictest, interval, limit, loadgen);
+		} catch(Exception ex) {
+			println("cyclictest runner on ${target} failed:");
+			println(ex.toString());
+			println(ex.getMessage());
+			println(ex.getStackTrace());
+			error("cyclictest runner on ${target} failed.");
+		}
+	}
 }
