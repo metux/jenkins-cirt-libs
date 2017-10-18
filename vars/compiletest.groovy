@@ -10,16 +10,18 @@ import de.linutronix.cirt.inputcheck;
 private compileJob(Map global, String config, String overlay,
 		   String repo, String branch) {
 	return {
-		def compiledir = "results/${config}/${overlay}";
-		println("Repository ${repo} ${branch}");
-		println("Compile Job ${config} ${overlay}");
-		deleteDir()
-		dir(compiledir) {
-			compiletestRunner(global, repo, branch,
-					  config, overlay);
+		stage ("compile ${repo} ${branch} ${config} ${overlay}") {
+			def compiledir = "results/${config}/${overlay}";
+			println("Repository ${repo} ${branch}");
+			println("Compile Job ${config} ${overlay}");
+			deleteDir()
+			dir(compiledir) {
+				compiletestRunner(global, repo, branch,
+						  config, overlay);
+			}
+			archiveArtifacts(artifacts: "${compiledir}/compile/**",
+					 fingerprint: true);
 		}
-		archiveArtifacts(artifacts: "${compiledir}/compile/**",
-                                 fingerprint: true);
 	}
 }
 
