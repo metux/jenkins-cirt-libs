@@ -5,9 +5,10 @@
 
 package de.linutronix.cirt;
 
+import de.linutronix.cirt.inputcheck;
 import java.io.File;
 
-def call(Map global, String repo, String branch,
+private runner(Map global, String repo, String branch,
 	 String config, String overlay) {
 	println("${repo} ${branch} ${config} ${overlay}");
 
@@ -52,6 +53,20 @@ def call(Map global, String repo, String branch,
 	stash(name: linuximage.replaceAll('/','_'),
 	      includes: 'compile/linux-image*deb',
 	      allowEmpty: true);
+}
+
+def call(Map global, String repo, String branch,
+	 String config, String overlay) {
+	try {
+		 inputcheck.check(global);
+		 runner(global, repo, branch, config, overlay);
+	} catch(Exception ex) {
+                println("compiletest runner failed:");
+                println(ex.toString());
+                println(ex.getMessage());
+                println(ex.getStackTrace());
+                error("compiletest runner failed.");
+        }
 }
 
 def call(String... params) {
