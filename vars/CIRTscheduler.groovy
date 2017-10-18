@@ -44,5 +44,12 @@ def call(body) {
 				boottest(global);
 			}
 		}
+
+		stage('collect and inform') {
+			node('master') {
+				println("feed database");
+				println("send email");
+			}
+		}
 	}
 }
