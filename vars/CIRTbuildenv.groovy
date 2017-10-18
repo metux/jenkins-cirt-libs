@@ -5,6 +5,8 @@
 
 package de.linutronix.cirt;
 
+import de.linutronix.cirt.inputcheck;
+
 private buildEnv(String commit) {
 	String[] properties = ["environment.properties"];
 	helper = new helper();
@@ -40,21 +42,30 @@ private handleLists(helper helper) {
 }
 
 def call(Integer schedId, String commit, Map global) {
-	node('master') {
-		deleteDir();
-		dir('environment') {
-			unstash(global.STASH_RAWENV);
-			buildEnv(commit);
-			stash(includes: '**/*.properties',
-			      name: global.STASH_PRODENV);
-			stash(includes: 'patches/**',
-			      name: global.STASH_PATCHES);
-			stash(includes: 'compile/configs/**, compile/overlays/**',
-			      name: global.STASH_COMPILECONF);
+	inputcheck.check(global);
+	try {
+		node('master') {
+			deleteDir();
+			dir('environment') {
+				unstash(global.STASH_RAWENV);
+				buildEnv(commit);
+				stash(includes: '**/*.properties',
+				      name: global.STASH_PRODENV);
+				stash(includes: 'patches/**',
+				      name: global.STASH_PATCHES);
+				stash(includes: 'compile/configs/**, compile/overlays/**',
+				      name: global.STASH_COMPILECONF);
+			}
+			archiveArtifacts(artifacts: '**/*.properties, environment/patches/**, environment/compile/configs/**, environment/compile/overlays/**',
+					 fingerprint: true);
 		}
-		archiveArtifacts(artifacts: '**/*.properties, environment/patches/**, environment/compile/configs/**, environment/compile/overlays/**',
-				 fingerprint: true);
-	}
+	} catch(Exception ex) {
+                println("CIRTbuildenv failed:");
+                println(ex.toString());
+                println(ex.getMessage());
+                println(ex.getStackTrace());
+                error("CIRTbuildenv failed.");
+        }
 }
 
 def call(String... params) {
