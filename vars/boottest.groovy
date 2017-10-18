@@ -5,6 +5,8 @@
 
 package de.linutronix.cirt;
 
+import de.linutronix.cirt.inputcheck;
+
 private boottestJob(Map global, String boottest) {
 	return {
 		println("Running boottest ${boottest}");
@@ -30,15 +32,24 @@ private runboottest(Map global, String[] boottests) {
 }
 
 def call(Map global) {
-	String[] properties = ["environment.properties"];
-	helper = new helper();
+	 try {
+		 inputcheck.check(global);
+		 String[] properties = ["environment.properties"];
+		 helper = new helper();
 
-	deleteDir();
-	unstash(global.STASH_PRODENV);
-	helper.add2environment(properties);
+		 deleteDir();
+		 unstash(global.STASH_PRODENV);
+		 helper.add2environment(properties);
 
-	String[] boottests = helper.getEnv("BOOTTESTS_ALL").split();
-	runboottest(global, boottests);
+		 String[] boottests = helper.getEnv("BOOTTESTS_ALL").split();
+		 runboottest(global, boottests);
+	 } catch(Exception ex) {
+		 println("boottest failed:");
+		 println(ex.toString());
+		 println(ex.getMessage());
+		 println(ex.getStackTrace());
+		 error("boottest failed.");
+        }
 }
 
 def call(String... params) {
