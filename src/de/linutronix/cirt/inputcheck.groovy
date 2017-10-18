@@ -4,11 +4,7 @@
 
 package de.linutronix.cirt;
 
-static def check(String branch, Map global) {
-        if (!branch?.trim()) {
-                error("param GUI_TESTDESCR_BRANCH not given.");
-        }
-
+static def check(Map global) {
         if (!global.STASH_PATCHES?.trim()) {
                 error("variable STASH_PATCHES not set.");
         }
@@ -28,4 +24,12 @@ static def check(String branch, Map global) {
         if (!global.TESTDESCRIPTION_REPO?.trim()) {
                 error("variable TESTDESCRIPTION_REPO not set.");
         }
+}
+
+static def check(String branch, Map global) {
+        if (!branch?.trim()) {
+                error("param GUI_TESTDESCR_BRANCH not given.");
+        }
+
+	check(global);
 }
