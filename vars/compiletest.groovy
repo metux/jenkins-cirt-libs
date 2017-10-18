@@ -5,6 +5,8 @@
 
 package de.linutronix.cirt;
 
+import de.linutronix.cirt.inputcheck;
+
 private compileJob(Map global, String config, String overlay,
 		   String repo, String branch) {
 	return {
@@ -43,18 +45,27 @@ private compile(Map global, Map environment) {
 }
 
 def call(Map global) {
-	unstash(global.STASH_PRODENV);
-	String[] properties = ["environment.properties"];
-	helper = new helper();
-
-	helper.add2environment(properties);
 	try {
-		environment = helper.getEnv();
-		compile(global, environment);
-	}
-	catch (java.lang.NullPointerException e) {
-		error("CONFIGS, OVERLAYS, GITREPO or GIT_CHECKOUT not set. Abort.");
-	}
+		inputcheck.check(global);
+		unstash(global.STASH_PRODENV);
+		String[] properties = ["environment.properties"];
+		helper = new helper();
+
+		helper.add2environment(properties);
+		try {
+			environment = helper.getEnv();
+			compile(global, environment);
+		}
+		catch (java.lang.NullPointerException e) {
+			error("CONFIGS, OVERLAYS, GITREPO or GIT_CHECKOUT not set. Abort.");
+		}
+	} catch(Exception ex) {
+                println("compiletest failed:");
+                println(ex.toString());
+                println(ex.getMessage());
+                println(ex.getStackTrace());
+                error("compiletest failed.");
+        }
 }
 
 def call(String... params) {
