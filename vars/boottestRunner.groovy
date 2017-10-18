@@ -5,6 +5,7 @@
 
 package de.linutronix.cirt;
 
+import de.linutronix.cirt.inputcheck;
 import de.linutronix.cirt.libvirt;
 
 private runner(Map global, String boottest) {
@@ -47,7 +48,16 @@ private runner(Map global, String boottest) {
 }
 
 def call(Map global, String boottest) {
-	runner(global, boottest);
+	try {
+		inputcheck.check(global);
+		runner(global, boottest);
+	} catch(Exception ex) {
+		println("boottest \"${boottest}\" failed:");
+		println(ex.toString());
+		println(ex.getMessage());
+		println(ex.getStackTrace());
+		error("boottest \"${boottest}\" failed.");
+        }
 }
 
 def call(String... params) {
