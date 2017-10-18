@@ -31,7 +31,7 @@ private runboottest(Map global, String[] boottests) {
 	parallel(stepsForParallel);
 }
 
-def call(Map global) {
+def call(Map global, String[] boottests) {
 	 try {
 		 inputcheck.check(global);
 		 String[] properties = ["environment.properties"];
@@ -41,7 +41,8 @@ def call(Map global) {
 		 unstash(global.STASH_PRODENV);
 		 helper.add2environment(properties);
 
-		 String[] boottests = helper.getEnv("BOOTTESTS_ALL").split();
+		 if (boottests == null)
+			 boottests = helper.getEnv("BOOTTESTS_ALL").split();
 		 runboottest(global, boottests);
 	 } catch(Exception ex) {
 		 println("boottest failed:");
@@ -50,6 +51,10 @@ def call(Map global) {
 		 println(ex.getStackTrace());
 		 error("boottest failed.");
         }
+}
+
+def call(Map global) {
+	call(global, null);
 }
 
 def call(String... params) {

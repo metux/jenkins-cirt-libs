@@ -39,12 +39,6 @@ def call(body) {
 			}
 		}
 
-		stage('boottest') {
-			node('master') {
-				boottest(global);
-			}
-		}
-
 		stage('collect and inform') {
 			node('master') {
 				println("feed database");

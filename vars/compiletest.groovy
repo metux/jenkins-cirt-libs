@@ -9,6 +9,18 @@ import de.linutronix.cirt.inputcheck;
 
 private compileJob(Map global, String config, String overlay,
 		   String repo, String branch) {
+	String[] boottestprops = ["compile/env/${config.replaceAll('/','-')}-${overlay}.properties"];
+	String[] boottests;
+	helper = new helper();
+
+	helper.add2environment(boottestprops);
+	try {
+		helper.showEnv();
+		boottests = helper.getEnv("BOOTTESTS").split();
+	} catch (java.lang.NullPointerException e) {
+		boottests = [];
+	}
+
 	return {
 		stage ("compile ${repo} ${branch} ${config} ${overlay}") {
 			def compiledir = "results/${config}/${overlay}";
@@ -21,6 +33,11 @@ private compileJob(Map global, String config, String overlay,
 			}
 			archiveArtifacts(artifacts: "${compiledir}/compile/**",
 					 fingerprint: true);
+		}
+		stage ("Boottests ${config} ${overlay}") {
+			node('master') {
+				boottest(global, boottests);
+			}
 		}
 	}
 }
@@ -59,6 +76,9 @@ def call(Map global) {
 			compile(global, environment);
 		}
 		catch (java.lang.NullPointerException e) {
+			println(e.toString());
+			println(e.getMessage());
+			println(e.getStackTrace());
 			error("CONFIGS, OVERLAYS, GITREPO or GIT_CHECKOUT not set. Abort.");
 		}
 	} catch(Exception ex) {
