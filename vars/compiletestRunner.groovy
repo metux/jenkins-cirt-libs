@@ -13,46 +13,46 @@ private runner(Map global, String repo, String branch,
 	println("${repo} ${branch} ${config} ${overlay}");
 
 	File configFile = new File("${config}");
-	helper = new helper();
 
-	helper.extraEnv("config", "${config}");
-	helper.extraEnv("overlay", "${overlay}");
-	helper.extraEnv("ARCH", configFile.getParent());
-	helper.extraEnv("CONFIGNAME", configFile.getName());
-	helper.extraEnv("RESULT", "compile");
-	helper.extraEnv("BUILD", "build");
-	arch = helper.getEnv("ARCH");
+	CIRThelper {
+		extraEnv("config", "${config}");
+		extraEnv("overlay", "${overlay}");
+		extraEnv("ARCH", configFile.getParent());
+		extraEnv("CONFIGNAME", configFile.getName());
+		extraEnv("RESULT", "compile");
+		extraEnv("BUILD", "build");
+		arch = getEnv("ARCH");
 
-	checkout([$class: 'GitSCM', branches: [[name: "${branch}"]],
-		  doGenerateSubmoduleConfigurations: false,
-		  extensions: [[$class: 'CloneOption',
-				depth: 1, noTags: false,
-				reference: '/home/mirror/kernel',
-				shallow: true, timeout: 60]],
-		  submoduleCfg: [], userRemoteConfigs: [[url: "${repo}"]]]);
+		checkout([$class: 'GitSCM', branches: [[name: "${branch}"]],
+			  doGenerateSubmoduleConfigurations: false,
+			  extensions: [[$class: 'CloneOption',
+					depth: 1, noTags: false,
+					reference: '/home/mirror/kernel',
+					shallow: true, timeout: 60]],
+			  submoduleCfg: [], userRemoteConfigs: [[url: "${repo}"]]]);
 
-	dir(".env") {
-		unstash(global.STASH_PRODENV);
-		unstash(global.STASH_COMPILECONF);
+		dir(".env") {
+			unstash(global.STASH_PRODENV);
+			unstash(global.STASH_COMPILECONF);
+		}
+
+		unstash(global.STASH_PATCHES);
+		sh("[ -d patches ] && quilt push -a");
+		runShellScript("compiletest/gittags.sh");
+
+		String[] properties = [".env/environment.properties",
+				       ".env/${arch}.properties",
+				       "compile/gittags.properties"];
+
+		add2environment(properties);
+		runShellScript("compiletest/preparekernel.sh");
+		runShellScript("compiletest/compile.sh");
+
+		def linuximage = "${config}/${overlay}";
+		stash(name: linuximage.replaceAll('/','_'),
+		      includes: 'compile/linux-image*deb',
+		      allowEmpty: true);
 	}
-
-	unstash(global.STASH_PATCHES);
-	sh("[ -d patches ] && quilt push -a");
-
-	helper.runShellScript("compiletest/gittags.sh");
-
-	String[] properties = [".env/environment.properties",
-			       ".env/${arch}.properties",
-			       "compile/gittags.properties"];
-
-	helper.add2environment(properties);
-	helper.runShellScript("compiletest/preparekernel.sh");
-	helper.runShellScript("compiletest/compile.sh");
-
-	def linuximage = "${config}/${overlay}";
-	stash(name: linuximage.replaceAll('/','_'),
-	      includes: 'compile/linux-image*deb',
-	      allowEmpty: true);
 }
 
 def call(Map global, String repo, String branch,
