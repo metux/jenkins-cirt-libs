@@ -26,8 +26,8 @@ private compileJob(Map global, String config, String overlay,
 			def compiledir = "results/${config}/${overlay}";
 			println("Repository ${repo} ${branch}");
 			println("Compile Job ${config} ${overlay}");
-			deleteDir()
 			dir(compiledir) {
+				deleteDir()
 				compiletestRunner(global, repo, branch,
 						  config, overlay);
 			}

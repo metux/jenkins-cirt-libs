@@ -45,8 +45,8 @@ def call(Integer schedId, String commit, Map global) {
 	inputcheck.check(global);
 	try {
 		node('master') {
-			deleteDir();
 			dir('environment') {
+				deleteDir();
 				unstash(global.STASH_RAWENV);
 				buildEnv(commit);
 				stash(includes: '**/*.properties',
