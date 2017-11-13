@@ -9,7 +9,7 @@ import de.linutronix.cirt.inputcheck;
 import java.io.File;
 
 private runner(Map global, String repo, String branch,
-	 String config, String overlay) {
+	       String config, String overlay) {
 	println("${repo} ${branch} ${config} ${overlay}");
 
 	File configFile = new File("${config}");
@@ -58,8 +58,8 @@ private runner(Map global, String repo, String branch,
 def call(Map global, String repo, String branch,
 	 String config, String overlay) {
 	try {
-		 inputcheck.check(global);
-		 runner(global, repo, branch, config, overlay);
+		inputcheck.check(global);
+		runner(global, repo, branch, config, overlay);
 	} catch(Exception ex) {
                 println("compiletest runner failed:");
                 println(ex.toString());
