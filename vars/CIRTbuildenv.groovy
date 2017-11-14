@@ -49,6 +49,10 @@ def call(Integer schedId, String commit, Map global) {
 				deleteDir();
 				unstash(global.STASH_RAWENV);
 				buildEnv(commit);
+				/*
+				 * Stash *.properties files; directory
+				 * hierarchy doesn't change
+				 */
 				stash(includes: '**/*.properties',
 				      name: global.STASH_PRODENV);
 				stash(includes: 'patches/**',
