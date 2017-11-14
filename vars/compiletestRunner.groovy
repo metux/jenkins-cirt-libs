@@ -41,7 +41,7 @@ private runner(Map global, String repo, String branch,
 		runShellScript("compiletest/gittags.sh");
 
 		String[] properties = [".env/environment.properties",
-				       ".env/${arch}.properties",
+				       ".env/compile/env/${arch}.properties",
 				       "compile/gittags.properties"];
 
 		add2environment(properties);
