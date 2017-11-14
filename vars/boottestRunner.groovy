@@ -23,13 +23,15 @@ private runner(Map global, String boottest) {
 	config = helper.getEnv("CONFIG");
 	overlay = helper.getEnv("OVERLAY");
 	kernel = "${config}/${overlay}";
-	boottestdir = "results/${kernel}";
+	/* Last subdirectory "boottest" for results is created by scripts */
+	boottestdir = "results/${kernel}/${target}";
 
 	hypervisor = libvirt.getURI(target);
 	helper.extraEnv("HYPERVISOR", hypervisor);
 	println("URI = ${hypervisor}");
 
 	dir(boottestdir) {
+		deleteDir();
 		lock(target) {
 			helptext = "Reboot to Kernel build (${env.BUILD_TAG})";
 			libvirt.wait4onlineTimeout(target, 120);
@@ -41,7 +43,14 @@ private runner(Map global, String boottest) {
 			libvirt.online(target, helptext);
 
 			cyclictests = helper.getEnv("CYCLICTESTS").split();
-			cyclictest(global, target, cyclictests);
+			node('master') {
+				/*
+				 * cyclictest is executed on another
+				 * node, workspace doesn't has to be
+				 * changed.
+				 */
+				cyclictest(global, target, cyclictests);
+			}
 		}
 	}
 	archiveArtifacts(artifacts: "${boottestdir}/boottest/**",
@@ -51,7 +60,10 @@ private runner(Map global, String boottest) {
 def call(Map global, String boottest) {
 	try {
 		inputcheck.check(global);
-		runner(global, boottest);
+		dir("boottestRunner") {
+			deleteDir();
+			runner(global, boottest);
+		}
 	} catch(Exception ex) {
 		println("boottest \"${boottest}\" failed:");
 		println(ex.toString());

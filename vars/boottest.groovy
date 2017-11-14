@@ -10,7 +10,9 @@ import de.linutronix.cirt.inputcheck;
 private boottestJob(Map global, String boottest) {
 	//return {
 		println("Running boottest ${boottest}");
-		boottestRunner(global, boottest);
+		dir ("../") {
+			boottestRunner(global, boottest);
+		}
 	//}
 }
 
@@ -31,11 +33,12 @@ private runboottest(Map global, String[] boottests) {
 def call(Map global, String[] boottests) {
 	 try {
 		 inputcheck.check(global);
-		 deleteDir();
-
-		 if (boottests == null)
-			 return;
-		 runboottest(global, boottests);
+		 dir("boottest") {
+			deleteDir();
+			if (boottests == null)
+				return;
+			runboottest(global, boottests);
+		 }
 	 } catch(Exception ex) {
 		 println("boottest failed:");
 		 println(ex.toString());
