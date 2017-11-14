@@ -21,11 +21,13 @@ def call(body) {
 
 		stage('checkout-testdescription') {
 			node('master') {
-				deleteDir();
-				git(branch: GUI_TESTDESCR_BRANCH,
-				    changelog: false, poll: false,
-				    url: global.TESTDESCRIPTION_REPO);
-				stash(global.STASH_RAWENV);
+				dir('rawenv') {
+					deleteDir();
+					git(branch: GUI_TESTDESCR_BRANCH,
+					    changelog: false, poll: false,
+					    url: global.TESTDESCRIPTION_REPO);
+					stash(global.STASH_RAWENV);
+				}
 			}
 		}
 
