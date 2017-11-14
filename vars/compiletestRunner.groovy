@@ -12,54 +12,68 @@ private runner(Map global, String repo, String branch,
 	       String config, String overlay) {
 	println("${repo} ${branch} ${config} ${overlay}");
 
-	File configFile = new File("${config}");
+	def compiledir = "results/${config}/${overlay}";
+	println("Repository ${repo} ${branch}");
+	println("Compile Job ${config} ${overlay}");
 
-	CIRThelper {
-		extraEnv("config", "${config}");
-		extraEnv("overlay", "${overlay}");
-		extraEnv("ARCH", configFile.getParent());
-		extraEnv("CONFIGNAME", configFile.getName());
-		extraEnv("RESULT", "compile");
-		extraEnv("BUILD", "build");
-		arch = getEnv("ARCH");
+	dir(compiledir) {
+		deleteDir();
+		File configFile = new File("${config}");
 
-		checkout([$class: 'GitSCM', branches: [[name: "${branch}"]],
-			  doGenerateSubmoduleConfigurations: false,
-			  extensions: [[$class: 'CloneOption',
-					depth: 1, noTags: false,
-					reference: '/home/mirror/kernel',
-					shallow: true, timeout: 60]],
-			  submoduleCfg: [], userRemoteConfigs: [[url: "${repo}"]]]);
+		CIRThelper {
+			extraEnv("config", "${config}");
+			extraEnv("overlay", "${overlay}");
+			extraEnv("ARCH", configFile.getParent());
+			extraEnv("CONFIGNAME", configFile.getName());
+			extraEnv("RESULT", "compile");
+			extraEnv("BUILD", "build");
+			arch = getEnv("ARCH");
 
-		dir(".env") {
-			unstash(global.STASH_PRODENV);
-			unstash(global.STASH_COMPILECONF);
+			checkout([$class: 'GitSCM', branches: [[name: "${branch}"]],
+				  doGenerateSubmoduleConfigurations: false,
+				  extensions: [[$class: 'CloneOption',
+						depth: 1, noTags: false,
+						reference: '/home/mirror/kernel',
+						shallow: true, timeout: 60]],
+				  submoduleCfg: [], userRemoteConfigs: [[url: "${repo}"]]]);
+
+			dir(".env") {
+				unstash(global.STASH_PRODENV);
+				unstash(global.STASH_COMPILECONF);
+			}
+
+			unstash(global.STASH_PATCHES);
+			sh("[ -d patches ] && quilt push -a");
+			runShellScript("compiletest/gittags.sh");
+
+			String[] properties = [".env/environment.properties",
+					       ".env/compile/env/${arch}.properties",
+					       "compile/gittags.properties"];
+
+			add2environment(properties);
+			runShellScript("compiletest/preparekernel.sh");
+			runShellScript("compiletest/compile.sh");
+
+			def linuximage = "${config}/${overlay}";
+			stash(name: linuximage.replaceAll('/','_'),
+			      includes: 'compile/linux-image*deb',
+			      allowEmpty: true);
 		}
 
-		unstash(global.STASH_PATCHES);
-		sh("[ -d patches ] && quilt push -a");
-		runShellScript("compiletest/gittags.sh");
-
-		String[] properties = [".env/environment.properties",
-				       ".env/compile/env/${arch}.properties",
-				       "compile/gittags.properties"];
-
-		add2environment(properties);
-		runShellScript("compiletest/preparekernel.sh");
-		runShellScript("compiletest/compile.sh");
-
-		def linuximage = "${config}/${overlay}";
-		stash(name: linuximage.replaceAll('/','_'),
-		      includes: 'compile/linux-image*deb',
-		      allowEmpty: true);
 	}
+	archiveArtifacts(artifacts: "${compiledir}/compile/**",
+			 fingerprint: true);
+
 }
 
 def call(Map global, String repo, String branch,
 	 String config, String overlay) {
 	try {
 		inputcheck.check(global);
-		runner(global, repo, branch, config, overlay);
+		dir("compiletestRunner") {
+			deleteDir()
+			runner(global, repo, branch, config, overlay);
+		}
 	} catch(Exception ex) {
                 println("compiletest runner failed:");
                 println(ex.toString());

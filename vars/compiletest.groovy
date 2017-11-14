@@ -23,16 +23,14 @@ private compileJob(Map global, String config, String overlay,
 
 	return {
 		stage ("compile ${repo} ${branch} ${config} ${overlay}") {
-			def compiledir = "results/${config}/${overlay}";
-			println("Repository ${repo} ${branch}");
-			println("Compile Job ${config} ${overlay}");
-			dir(compiledir) {
-				deleteDir()
+			/*
+			 * Subprocesses needs to be started in
+			 * WORKSPACE!
+			 */
+			dir("../") {
 				compiletestRunner(global, repo, branch,
 						  config, overlay);
 			}
-			archiveArtifacts(artifacts: "${compiledir}/compile/**",
-					 fingerprint: true);
 		}
 		stage ("Boottests ${config} ${overlay}") {
 			node('master') {
@@ -66,20 +64,23 @@ private compile(Map global, Map environment) {
 def call(Map global) {
 	try {
 		inputcheck.check(global);
-		unstash(global.STASH_PRODENV);
-		String[] properties = ["environment.properties"];
-		helper = new helper();
+		dir("compiletest") {
+			deleteDir();
+			unstash(global.STASH_PRODENV);
+			String[] properties = ["environment.properties"];
+			helper = new helper();
 
-		helper.add2environment(properties);
-		try {
-			environment = helper.getEnv();
-			compile(global, environment);
-		}
-		catch (java.lang.NullPointerException e) {
-			println(e.toString());
-			println(e.getMessage());
-			println(e.getStackTrace());
-			error("CONFIGS, OVERLAYS, GITREPO or GIT_CHECKOUT not set. Abort.");
+			helper.add2environment(properties);
+			try {
+				environment = helper.getEnv();
+				compile(global, environment);
+			}
+			catch (java.lang.NullPointerException e) {
+				println(e.toString());
+				println(e.getMessage());
+				println(e.getStackTrace());
+				error("CONFIGS, OVERLAYS, GITREPO or GIT_CHECKOUT not set. Abort.");
+			}
 		}
 	} catch(Exception ex) {
                 println("compiletest failed:");
