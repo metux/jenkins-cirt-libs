@@ -9,6 +9,7 @@ import de.linutronix.cirt.inputcheck;
 import de.linutronix.cirt.libvirt;
 
 private runner(Map global, String boottest) {
+	unstash(global.STASH_PRODENV);
 	helper = new helper();
 	String[] properties = ["environment.properties",
 			       "${boottest}.properties"];

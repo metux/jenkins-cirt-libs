@@ -19,10 +19,6 @@ private runboottest(Map global, String[] boottests) {
 
 	for (int i = 0; i < boottests.size(); i++) {
 		def boottest = boottests.getAt(i);
-		String[] properties = ["environment.properties",
-				       "${boottest}.properties"];
-		helper = new helper();
-		helper.add2environment(properties);
 
 		//def jobName = "Boottest ${boottest}";
 		//stepsForParallel[jobName] =
@@ -35,12 +31,7 @@ private runboottest(Map global, String[] boottests) {
 def call(Map global, String[] boottests) {
 	 try {
 		 inputcheck.check(global);
-		 String[] properties = ["environment.properties"];
-		 helper = new helper();
-
 		 deleteDir();
-		 unstash(global.STASH_PRODENV);
-		 helper.add2environment(properties);
 
 		 if (boottests == null)
 			 boottests = helper.getEnv("BOOTTESTS_ALL").split();
