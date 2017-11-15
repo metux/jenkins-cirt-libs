@@ -64,11 +64,9 @@ private compileJob(Map global, String config, String overlay,
 	}
 }
 
-private compile(Map global, Map environment) {
+private compile(Map global, String[] configs, String[] overlays,
+		String gitrepo, String gitcheckout) {
 	def stepsForParallel = [:];
-
-	configs = environment['CONFIGS'].split();
-	overlays = environment['OVERLAYS'].split();
 
 	for (int i = 0; i < configs.size(); i++) {
 		for (int j = 0; j < overlays.size(); j++) {
@@ -77,8 +75,8 @@ private compile(Map global, Map environment) {
 				compileJob(global,
 					   "${configs.getAt(i)}",
 					   "${overlays.getAt(j)}",
-					   environment['GITREPO'],
-					   environment['GIT_CHECKOUT']);
+					   gitrepo,
+					   gitcheckout);
 		}
 	}
 
@@ -95,16 +93,26 @@ def call(Map global) {
 			helper = new helper();
 
 			helper.add2environment(properties);
+			/*
+			 * TODO: Check, if properties file has all
+			 * information will be later moved into
+			 * environment verification
+			 */
 			try {
 				environment = helper.getEnv();
-				compile(global, environment);
+				configs = environment['CONFIGS'].split();
+				overlays = environment['OVERLAYS'].split();
+				gitrepo = environment['GITREPO'];
+				gitcheckout = environment['GIT_CHECKOUT'];
 			}
+			/* Catches not set environment Parameters */
 			catch (java.lang.NullPointerException e) {
 				println(e.toString());
 				println(e.getMessage());
 				println(e.getStackTrace());
 				error("CONFIGS, OVERLAYS, GITREPO or GIT_CHECKOUT not set. Abort.");
 			}
+			compile(global, configs, overlays, gitrepo, gitcheckout);
 		}
 	} catch(Exception ex) {
                 println("compiletest failed:");
