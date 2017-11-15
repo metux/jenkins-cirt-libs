@@ -34,7 +34,7 @@ def call(Map global, String[] boottests) {
 		 deleteDir();
 
 		 if (boottests == null)
-			 boottests = helper.getEnv("BOOTTESTS_ALL").split();
+			 return;
 		 runboottest(global, boottests);
 	 } catch(Exception ex) {
 		 println("boottest failed:");
