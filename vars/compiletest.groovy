@@ -9,32 +9,56 @@ import de.linutronix.cirt.inputcheck;
 
 private compileJob(Map global, String config, String overlay,
 		   String repo, String branch) {
-	String[] boottestprops = ["compile/env/${config.replaceAll('/','-')}-${overlay}.properties"];
-	String[] boottests;
-	helper = new helper();
+	/* fileExists is a relative query! */
+	configbootprop = "compile/env/${config.replaceAll('/','-')}-${overlay}.properties";
+	boot = fileExists "${configbootprop}";
 
-	helper.add2environment(boottestprops);
-	try {
-		helper.showEnv();
-		boottests = helper.getEnv("BOOTTESTS").split();
-	} catch (java.lang.NullPointerException e) {
-		boottests = [];
-	}
+	if (boot) {
+		String[] boottestprops = [configbootprop];
+		String[] boottests;
+		helper = new helper();
 
-	return {
-		stage ("compile ${repo} ${branch} ${config} ${overlay}") {
-			/*
-			 * Subprocesses needs to be started in
-			 * WORKSPACE!
-			 */
-			dir("../") {
-				compiletestRunner(global, repo, branch,
-						  config, overlay);
+		helper.add2environment(boottestprops);
+		try {
+			helper.showEnv();
+			boottests = helper.getEnv("BOOTTESTS").split();
+		} catch (java.lang.NullPointerException e) {
+			boottests = [];
+		}
+
+		return {
+			stage ("compile ${repo} ${branch} ${config} ${overlay}") {
+				/*
+				 * Subprocesses needs to be started in
+				 * WORKSPACE!
+				 */
+				dir("../") {
+					compiletestRunner(global, repo, branch,
+							  config, overlay);
+				}
+			}
+			stage ("Boottests ${config} ${overlay}") {
+				node('master') {
+					/*
+					 * boottest is executed on
+					 * another node, workspace
+					 * doesn't has to be changed.
+					 */
+					boottest(global, boottests);
+				}
 			}
 		}
-		stage ("Boottests ${config} ${overlay}") {
-			node('master') {
-				boottest(global, boottests);
+	} else {
+		return {
+			stage ("compile ${repo} ${branch} ${config} ${overlay}") {
+				/*
+				 * Subprocesses needs to be started in
+				 * WORKSPACE!
+				 */
+				dir("../") {
+					compiletestRunner(global, repo, branch,
+							  config, overlay);
+				}
 			}
 		}
 	}
