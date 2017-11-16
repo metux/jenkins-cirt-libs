@@ -60,7 +60,7 @@ def call(Integer schedId, String commit, Map global) {
 				stash(includes: 'compile/configs/**, compile/overlays/**',
 				      name: global.STASH_COMPILECONF);
 			}
-			archiveArtifacts(artifacts: '**/*.properties, environment/patches/**, environment/compile/configs/**, environment/compile/overlays/**',
+			archiveArtifacts(artifacts: 'environment/**/*.properties, environment/patches/**, environment/compile/configs/**, environment/compile/overlays/**',
 					 fingerprint: true);
 		}
 	} catch(Exception ex) {
