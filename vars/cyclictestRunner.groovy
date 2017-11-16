@@ -5,16 +5,6 @@
 
 package de.linutronix.cirt;
 
-private action(String cyclictest, helper helper) {
-	dir('result/' + cyclictest) {
-		helper.runShellScript("cyclictest/cyclictest.sh");
-	}
-
-	archiveArtifacts('result/**/histogram.*');
-	stash(name: cyclictest.replaceAll('/','_'),
-	      includes: 'result/**/histogram.*');
-}
-
 private runner(String cyclictest, String interval, String limit,
 	       String loadgen) {
 	helper = new helper();
@@ -24,7 +14,13 @@ private runner(String cyclictest, String interval, String limit,
 		helper.extraEnv("LOADGEN", loadgen);
 	}
 
-	action(cyclictest, helper);
+	dir('result/' + cyclictest) {
+		helper.runShellScript("cyclictest/cyclictest.sh");
+	}
+
+	archiveArtifacts('result/**/histogram.*');
+	stash(name: cyclictest.replaceAll('/','_'),
+	      includes: 'result/**/histogram.*');
 }
 
 def call(String target, String cyclictest, String interval, String limit,
