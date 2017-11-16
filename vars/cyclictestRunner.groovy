@@ -5,14 +5,23 @@
 
 package de.linutronix.cirt;
 
-private runner(String cyclictest, String interval, String limit,
-	       String loadgen) {
+private runner(Map global, String target, String cyclictest) {
+
+	unstash(global.STASH_PRODENV);
+
 	helper = new helper();
-	helper.extraEnv("INTERVAL", interval);
-	helper.extraEnv("LIMIT", limit);
-	if (loadgen?.trim()) {
-		helper.extraEnv("LOADGEN", loadgen);
-	}
+	String[] properties = ["environment.properties",
+			       "boot/${target}.properties",
+			       "${cyclictest}.properties"];
+
+	helper.add2environment(properties);
+
+	loadgen = helper.getEnv("LOADGEN");
+	loadgen?.trim();
+	interval = helper.getEnv("INTERVAL");
+	limit = helper.getEnv("LIMIT");
+
+	println("cyclictest-runner: ${target} ${cyclictest} ${interval} ${limit}\n${loadgen}");
 
 	dir('result/' + cyclictest) {
 		helper.runShellScript("cyclictest/cyclictest.sh");
@@ -23,14 +32,11 @@ private runner(String cyclictest, String interval, String limit,
 	      includes: 'result/**/histogram.*');
 }
 
-def call(String target, String cyclictest, String interval, String limit,
-	 String loadgen) {
-
-	println("cyclictest-runner: ${target} ${cyclictest} ${interval} ${limit}\n${loadgen}");
+def call(Map global, String target, String cyclictest) {
 
 	node(target) {
 		try {
-			runner(cyclictest, interval, limit, loadgen);
+			runner(global, target, cyclictest);
 		} catch(Exception ex) {
 			println("cyclictest runner on ${target} failed:");
 			println(ex.toString());
