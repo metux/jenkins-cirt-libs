@@ -27,18 +27,3 @@ def call(String[] boottests) {
 		prepareEnv(boottests.getAt(i));
 	}
 }
-
-def call(Integer schedId, String[] boottests) {
-	node('master') {
-		stage("environment-cyclictest") {
-			deleteDir();
-			unstash('rawenvironment');
-			for (int i = 0; i < boottests.size(); i++) {
-				prepareEnv(boottests.getAt(i));
-				archiveArtifacts(artifacts: "${boottests.getAt(i)}.properties",
-						 allowEmptyArchive: true,
-						 fingerprint: true);
-			}
-		}
-	}
-}

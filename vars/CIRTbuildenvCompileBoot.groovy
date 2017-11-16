@@ -25,19 +25,6 @@ def call(String[] configs, String[] overlays) {
 	buildCompBootEnv(configs, overlays);
 }
 
-def call(Integer schedId, String[] configs, String[] overlays) {
-	node('master') {
-		stage("environment-compile-boot") {
-			deleteDir();
-			unstash('rawenvironment');
-			buildCompBootEnv(configs, overlays);
-			archiveArtifacts(artifacts: 'compile/env/*.properties',
-					 allowEmptyArchive: true,
-					 fingerprint: true);
-		}
-	}
-}
-
 def call(String... params) {
 	println params
 	error("Unknown signature. Abort.");
