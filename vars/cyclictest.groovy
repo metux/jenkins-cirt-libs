@@ -11,12 +11,17 @@ def call(Map global, String target, String[] cyclictests) {
 	try {
                 inputcheck.check(global);
 		node('master') {
-			for (int i = 0; i < cyclictests.size(); i++) {
-				ct = cyclictests[i];
-
+			dir ("cyclictest") {
 				deleteDir();
+				for (int i = 0; i < cyclictests.size(); i++) {
+					ct = cyclictests[i];
 
-				cyclictestRunner(global, target, ct);
+					/*
+					 * Cyclictest runner is executed on target;
+					 * workspace directory doesn't has to be changed
+					 */
+					cyclictestRunner(global, target, ct);
+				}
 			}
 		}
 	} catch(Exception ex) {

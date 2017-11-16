@@ -23,20 +23,30 @@ private runner(Map global, String target, String cyclictest) {
 
 	println("cyclictest-runner: ${target} ${cyclictest} ${interval} ${limit}\n${loadgen}");
 
-	dir('result/' + cyclictest) {
+	config = helper.getEnv("CONFIG");
+	overlay = helper.getEnv("OVERLAY");
+	kernel = "${config}/${overlay}";
+	cyclictestdir = "results/${kernel}/${target}/${cyclictest}";
+
+	dir(cyclictestdir) {
+		deleteDir();
 		helper.runShellScript("cyclictest/cyclictest.sh");
 	}
 
-	archiveArtifacts('result/**/histogram.*');
+	archiveArtifacts("${cyclictestdir}/histogram.*");
+
 	stash(name: cyclictest.replaceAll('/','_'),
-	      includes: 'result/**/histogram.*');
+	      includes: "${cyclictestdir}/histogram.*");
 }
 
 def call(Map global, String target, String cyclictest) {
 
 	node(target) {
 		try {
-			runner(global, target, cyclictest);
+			dir("cyclictestRunner") {
+				deleteDir();
+				runner(global, target, cyclictest);
+			}
 		} catch(Exception ex) {
 			println("cyclictest runner on ${target} failed:");
 			println(ex.toString());
