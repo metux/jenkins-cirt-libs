@@ -11,13 +11,15 @@ def call(Map global, String target, String kernel) {
 	try {
 		inputcheck.check(global);
 		node(target) {
-			println("Run target preperation for ${kernel}");
-			deleteDir();
-			unstash(kernel.replaceAll('/','_'));
+			dir("targetprep") {
+				println("Run target preperation for ${kernel}");
+				deleteDir();
+				unstash(kernel.replaceAll('/','_'));
 
-			helper = new helper();
-			helper.extraEnv("SCHEDULER_ID", env.BUILD_NUMBER);
-			helper.runShellScript("targetprep/preperation.sh");
+				helper = new helper();
+				helper.extraEnv("SCHEDULER_ID", env.BUILD_NUMBER);
+				helper.runShellScript("targetprep/preperation.sh");
+			}
 		}
 	} catch(Exception ex) {
 		println("targetprep ${kernel} on ${target} failed:");
