@@ -32,7 +32,7 @@ def call(body) {
 		}
 
 		stage('build CI-RT environment') {
-			CIRTbuildenv(currentBuild.number, GUI_COMMIT, global);
+			CIRTbuildenv(GUI_COMMIT, global);
 		}
 
 		stage('compile') {

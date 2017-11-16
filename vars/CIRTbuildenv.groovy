@@ -41,7 +41,7 @@ private handleLists(helper helper) {
 	helper.runShellScript("environment/arch_env_magic.py");
 }
 
-def call(Integer schedId, String commit, Map global) {
+def call(String commit, Map global) {
 	inputcheck.check(global);
 	try {
 		node('master') {
