@@ -25,6 +25,7 @@ private runner(Map global, String boottest) {
 	kernel = "${config}/${overlay}";
 	/* Last subdirectory "boottest" for results is created by scripts */
 	boottestdir = "results/${kernel}/${target}";
+	resultdir = "boottest";
 
 	hypervisor = libvirt.getURI(target);
 	helper.extraEnv("HYPERVISOR", hypervisor);
@@ -39,6 +40,11 @@ private runner(Map global, String boottest) {
 			targetprep(global, target, kernel);
 
 			libvirt.offline(target, helptext);
+
+			/* Create result directory */
+			dir(resultdir) {
+				writeFile file:'boottest.sh', text:'';
+			}
 			def content = """\
 #! /bin/bash
 
@@ -49,14 +55,14 @@ set -e
 export TARGET=${target}
 export SCHEDULER_ID=${env.BUILD_NUMBER}
 export HYPERVISOR=${hypervisor}
+
+RESULT_DIR=${resultdir}
 """ + '''
 
 # log of serial console
-export SERIALLOG=boottest/serialboot.log
-export BOOTLOG=boottest/boot.log
+export SERIALLOG=$RESULT_DIR/serialboot.log
+export BOOTLOG=$RESULT_DIR/boot.log
 export BOOTLOGRAW=boot.raw
-
-mkdir -p boottest
 
 virsh -c "$HYPERVISOR" consolelog $TARGET --force --logfile $SERIALLOG &
 export SERLOGPID=$!
@@ -135,7 +141,7 @@ then
 	touch "target_reboot.failed"
 fi
 ''';
-			writeFile file:"boottest/boottest.sh", text:content;
+			writeFile file:"${resultdir}/boottest.sh", text:content;
 			sh "${content}";
 
 			libvirt.online(target, helptext);
@@ -151,7 +157,7 @@ fi
 			}
 		}
 	}
-	archiveArtifacts(artifacts: "${boottestdir}/boottest/**",
+	archiveArtifacts(artifacts: "${boottestdir}/${resultdir}/**",
 			 fingerprint: true);
 }
 
