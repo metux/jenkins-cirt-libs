@@ -15,8 +15,15 @@ private writeBootlog(String seriallog, String bootlog) {
 	serial_content = readFile(seriallog);
 	serial_splits = serial_content.split(kexec_delimiter);
 
-	/* remove all lines which are not kernel output */
-	boot_content = serial_splits[1].replaceAll(/(?m)^[^\[]*/, "");
+	/* error, if kexec_delimiter do not occur, or occurs more than one time */
+	def cnt = serial_splits.size() - 1;
+	if (cnt != 1) {
+		boot_content = serial_content;
+		error message:"kexec delimiter \"${kexec_delimiter}\" occurs "+cnt+"time";
+	} else {
+		/* remove all lines which are no kernel output */
+		boot_content = serial_splits[1].replaceAll(/(?m)^[^\[]*/, "");
+	}
 
 	writeFile file:bootlog, text:boot_content;
 }
