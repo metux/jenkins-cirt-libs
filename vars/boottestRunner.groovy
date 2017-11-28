@@ -8,6 +8,20 @@ package de.linutronix.cirt;
 import de.linutronix.cirt.inputcheck;
 import de.linutronix.cirt.libvirt;
 
+private writeBootlog(String seriallog, String bootlog) {
+	kexec_delimiter = "--- CI-RT Booting Testkernel Kexec ---";
+
+	/* extract kexec bootlog of serial log*/
+	serial_content = readFile(seriallog);
+	serial_splits = serial_content.split(kexec_delimiter);
+
+	/* remove all lines which are not kernel output */
+	boot_content = serial_splits[1].replaceAll(/(?m)^[^\[]*/, "");
+
+	writeFile file:bootlog, text:boot_content;
+}
+
+
 private runner(Map global, String boottest) {
 	unstash(global.STASH_PRODENV);
 	helper = new helper();
@@ -34,6 +48,9 @@ private runner(Map global, String boottest) {
 	dir(boottestdir) {
 		deleteDir();
 		lock(target) {
+			seriallog = "${resultdir}/serialboot.log";
+			bootlog = "${resultdir}/boot.log";
+
 			helptext = "Reboot to Kernel build (${env.BUILD_TAG})";
 			libvirt.wait4onlineTimeout(target, 120);
 
@@ -56,13 +73,9 @@ export TARGET=${target}
 export SCHEDULER_ID=${env.BUILD_NUMBER}
 export HYPERVISOR=${hypervisor}
 
-RESULT_DIR=${resultdir}
-""" + '''
-
 # log of serial console
-export SERIALLOG=$RESULT_DIR/serialboot.log
-export BOOTLOG=$RESULT_DIR/boot.log
-export BOOTLOGRAW=boot.raw
+export SERIALLOG=${seriallog}
+""" + '''
 
 virsh -c "$HYPERVISOR" consolelog $TARGET --force --logfile $SERIALLOG &
 export SERLOGPID=$!
@@ -102,39 +115,6 @@ else
 fi
 
 
-# extract kernel output from serial log (Timestamps are enabled via command-line
-# argument: printk.time=y):
-# example output:
-# [    3.677067] sysrq: SysRq : Emergency Sync
-
-# remove all stuff before starting the kernel
-while IFS='' read -r line || test -n "$line"
-do
-	# look for "[    0.000000]" lines by replace and compare.
-	# if "[    0.000000]" is found (and replaced) $tst and $line
-	# do NOT match.
-
-	tst=$(echo "$line" | sed "s/\\[    0.000000\\]/XXX/")
-
-	if [ "$tst" = "$line" ]
-	then
-		# "[    0.000000]" *not* found
-		out=1
-	else
-		# "[    0.000000]" found
-		if [ $out = "1" ]
-		then
-			# clear output file on first "[    0.000000]" line
-			: > $BOOTLOGRAW
-			out=2
-		fi
-	fi
-	echo "$line" >> $BOOTLOGRAW
-done < $SERIALLOG
-
-# extract kernel output from
-grep "\\[[ ]*[0-9]\\+\\.[0-9]\\+\\]" $BOOTLOGRAW > $BOOTLOG
-
 # Do not stop here. Set marker "target_reboot.failed" and wait some time to settle the hardware
 if [ "$PASS" = "0" ]
 then
@@ -143,6 +123,8 @@ fi
 ''';
 			writeFile file:"${resultdir}/boottest.sh", text:content;
 			sh "${content}";
+
+			writeBootlog(seriallog, bootlog);
 
 			libvirt.online(target, helptext);
 
