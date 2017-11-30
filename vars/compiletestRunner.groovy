@@ -18,6 +18,7 @@ private runner(Map global, String repo, String branch,
 
 	resultdir = "compile";
 	builddir = "build";
+	def linuximageprop = "${config}/${overlay}".replaceAll('/','-');
 
 	dir(compiledir) {
 		deleteDir();
@@ -77,11 +78,12 @@ export ARCH=${arch}
 
 MAKE_PARALLEL=${env.PARALLEL_MAKE_JOBS ?: '16'}
 LOCALVERSION=${env.BUILD_NUMBER}
-CONFIGNAME=${configFile.getName()}
-overlay=${overlay}
+CONFIG_OVERLAY=${linuximageprop}
 BUILD_DIR=${builddir}
 RESULT_DIR=${resultdir}
-BUILDONLY=${fileExists(".env/compile/env/"+arch+"-"+configFile.getName()+"-"+overlay+".properties") == "true" ? 1 : 0}
+
+# TODO: Replace linuximageprop with linuximage, when property files are with _ instead of -
+BUILDONLY=${fileExists(".env/compile/env/"+linuximageprop+".properties") == "true" ? 1 : 0}
 """+'''
 
 BUILDARGS="-j ${MAKE_PARALLEL}  O=${BUILD_DIR} LOCALVERSION=-${LOCALVERSION}"
@@ -90,7 +92,7 @@ BUILDARGS="-j ${MAKE_PARALLEL}  O=${BUILD_DIR} LOCALVERSION=-${LOCALVERSION}"
 LOGFILE=${RESULT_DIR}/compile.log
 LOGFILE_PKG=${RESULT_DIR}/package.log
 
-echo "compiletest-runner #${LOCALVERSION} $ARCH/$CONFIGNAME (stderr)" > $LOGFILE
+echo "compiletest-runner #${LOCALVERSION} $CONFIG_OVERLAY (stderr)" > $LOGFILE
 make $BUILDARGS 2> >(tee -a $LOGFILE >&2)
 
 # Make devicetree binaries?
@@ -103,7 +105,7 @@ fi
 # need to be created and stored in $RESULT_DIR
 if [ $BUILDONLY -eq 0 ]
 then
-	echo "compiletest-runner #${LOCALVERSION} $ARCH/$CONFIGNAME ${BUILD_TARGET:bindeb-pkg} (stderr)" > $LOGFILE_PKG
+	echo "compiletest-runner #${LOCALVERSION} $CONFIG_OVERLAY ${BUILD_TARGET:bindeb-pkg} (stderr)" > $LOGFILE_PKG
 	make $BUILDARGS ${BUILD_TARGET:-bindeb-pkg} 2> >(tee -a $LOGFILE_PKG >&2)
 
 	if [ -d $BUILD_DIR/arch/${ARCH}/boot/dts ]
