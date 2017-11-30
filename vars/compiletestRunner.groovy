@@ -19,70 +19,55 @@ private runner(Map global, String repo, String branch,
 	resultdir = "compile";
 	builddir = "build";
 	def linuximageprop = "${config}/${overlay}".replaceAll('/','-');
+	arch = config.split("/")[0];
 
 	dir(compiledir) {
 		deleteDir();
-		File configFile = new File("${config}");
 
-		CIRThelper {
-			extraEnv("config", "${config}");
-			extraEnv("overlay", "${overlay}");
-			extraEnv("ARCH", configFile.getParent());
-			extraEnv("CONFIGNAME", configFile.getName());
-			extraEnv("RESULT", "${resultdir}");
-			extraEnv("BUILD", "${builddir}");
-			arch = getEnv("ARCH");
+		checkout([$class: 'GitSCM', branches: [[name: "${branch}"]],
+			  doGenerateSubmoduleConfigurations: false,
+			  extensions: [[$class: 'CloneOption',
+					depth: 1, noTags: false,
+					reference: '/home/mirror/kernel',
+					shallow: true, timeout: 60]],
+			  submoduleCfg: [], userRemoteConfigs: [[url: "${repo}"]]]);
 
-			checkout([$class: 'GitSCM', branches: [[name: "${branch}"]],
-				  doGenerateSubmoduleConfigurations: false,
-				  extensions: [[$class: 'CloneOption',
-						depth: 1, noTags: false,
-						reference: '/home/mirror/kernel',
-						shallow: true, timeout: 60]],
-				  submoduleCfg: [], userRemoteConfigs: [[url: "${repo}"]]]);
+		dir(".env") {
+			unstash(global.STASH_PRODENV);
+			unstash(global.STASH_COMPILECONF);
+		}
 
-			dir(".env") {
-				unstash(global.STASH_PRODENV);
-				unstash(global.STASH_COMPILECONF);
-			}
+		/* Unstash and apply test-description patch queue */
+		unstash(global.STASH_PATCHES);
+		sh("[ -d patches ] && quilt push -a");
 
-			/* Unstash and apply test-description patch queue */
-			unstash(global.STASH_PATCHES);
-			sh("[ -d patches ] && quilt push -a");
+		/* Extract gittag information for db entry */
+		dir(resultdir) {
+			sh """echo "TAGS_COMMIT=\$(git rev-parse HEAD)" >> gittags.properties""";
+			sh """echo "TAGS_COMMIT=\$(git describe HEAD)" >> gittags.properties""";
+		}
 
-			/* Extract gittag information for db entry */
-			dir(resultdir) {
-				sh """echo "TAGS_COMMIT=\$(git rev-parse HEAD)" >> gittags.properties""";
-				sh """echo "TAGS_COMMIT=\$(git describe HEAD)" >> gittags.properties""";
-			}
+		/* Create builddir and create empty .config */
+		/* TODO: better solution for an empty builddir (new File(NAME).mkdir())? */
+		dir(builddir) {
+			sh '''touch .config''';
+		}
 
-			/* Create builddir and create empty .config */
-			/* TODO: better solution for an empty builddir (new File(NAME).mkdir())? */
-			dir(builddir) {
-				sh '''touch .config''';
-			}
+		prepconfig = libraryResource('de/linutronix/cirt/compiletest/preparekernel.sh');
+		writeFile file:"prepconfig.sh", text:prepconfig;
+		sh ". prepconfig.sh ${config} ${overlay} ${resultdir} ${builddir} ${env.BUILD_NUMBER}";
 
-			String[] properties = [".env/environment.properties",
-					       ".env/compile/env/${arch}.properties",
-					       "compile/gittags.properties"];
+		/*
+		 * Use environment file and add an "export " at the
+		 * begin of every line, to be includable in compile
+		 * bash script; remove empty lines before adding
+		 * "export ".
+		 */
+		def exports = readFile ".env/compile/env/${arch}.properties";
+		exports = exports.replaceAll(/(?m)^\s*\n/, "");
+		exports = exports.replaceAll(/(?m)^/, "export ");
 
-			add2environment(properties);
-
-			prepconfig = libraryResource('de/linutronix/cirt/compiletest/preparekernel.sh');
-			writeFile file:"prepconfig.sh", text:prepconfig;
-			sh ". prepconfig.sh ${config} ${overlay} ${resultdir} ${builddir} ${env.BUILD_NUMBER}";
-
-			/*
-			 * Use environment file and add an "export "
-			 * at the begin of every line, to be
-			 * includable in compile bash script; remove
-			 * empty lines before adding "export ".
-			 */
-			def exports = readFile ".env/compile/env/${arch}.properties";
-			exports = exports.replaceAll(/(?m)^\s*\n/, "");
-			exports = exports.replaceAll(/(?m)^/, "export ");
-
-			def script_content = """#!/bin/bash
+		def script_content = """#!/bin/bash
 
 # Abort build script if there was an error executing the commands
 set -e
@@ -143,15 +128,13 @@ then
 fi
 ''';
 
-			writeFile file:"${resultdir}/compile-script.sh", text:script_content;
-			sh ". ${resultdir}/compile-script.sh";
+		writeFile file:"${resultdir}/compile-script.sh", text:script_content;
+		sh ". ${resultdir}/compile-script.sh";
 
-			def linuximage = "${config}/${overlay}";
-			stash(name: linuximage.replaceAll('/','_'),
-			      includes: 'compile/linux-image*deb',
-			      allowEmpty: true);
-		}
-
+		def linuximage = "${config}/${overlay}";
+		stash(name: linuximage.replaceAll('/','_'),
+		      includes: 'compile/linux-image*deb',
+		      allowEmpty: true);
 	}
 	archiveArtifacts(artifacts: "${compiledir}/compile/**",
 			 fingerprint: true);
