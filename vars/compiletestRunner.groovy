@@ -16,6 +16,9 @@ private runner(Map global, String repo, String branch,
 	println("Repository ${repo} ${branch}");
 	println("Compile Job ${config} ${overlay}");
 
+	resultdir = "compile";
+	builddir = "build";
+
 	dir(compiledir) {
 		deleteDir();
 		File configFile = new File("${config}");
@@ -25,8 +28,8 @@ private runner(Map global, String repo, String branch,
 			extraEnv("overlay", "${overlay}");
 			extraEnv("ARCH", configFile.getParent());
 			extraEnv("CONFIGNAME", configFile.getName());
-			extraEnv("RESULT", "compile");
-			extraEnv("BUILD", "build");
+			extraEnv("RESULT", "${resultdir}");
+			extraEnv("BUILD", "${builddir}");
 			arch = getEnv("ARCH");
 
 			checkout([$class: 'GitSCM', branches: [[name: "${branch}"]],
@@ -75,36 +78,36 @@ export ARCH=${arch}
 SCHEDULER_ID=${getEnv("SCHEDULER_ID")}
 CONFIGNAME=${configFile.getName()}
 overlay=${overlay}
-BUILD=build
-RESULT=compile
+BUILD_DIR=${builddir}
+RESULT_DIR=${resultdir}
 BUILDONLY=${fileExists(".env/compile/env/"+arch+"-"+configFile.getName()+"-"+overlay+".properties") == "true" ? 1 : 0}
 """+'''
 
-echo "compiletest-runner #$BUILD_NUMBER $ARCH/$CONFIGNAME (stderr)" > $RESULT/compile.log
-make -j ${PARALLEL_MAKE_JOBS:=16} O=$BUILD LOCALVERSION=-$SCHEDULER_ID 2> >(tee -a $RESULT/compile.log >&2)
+echo "compiletest-runner #$BUILD_NUMBER $ARCH/$CONFIGNAME (stderr)" > $RESULT_DIR/compile.log
+make -j ${PARALLEL_MAKE_JOBS:=16} O=$BUILD_DIR LOCALVERSION=-$SCHEDULER_ID 2> >(tee -a $RESULT_DIR/compile.log >&2)
 
 # Make devicetree binaries?
 if [ xtrue = x"$MKDTBS" ]
 then
-	make -j ${PARALLEL_MAKE_JOBS:=16} O=$BUILD LOCALVERSION=-$SCHEDULER_ID dtbs 2> >(tee -a $RESULT/compile.log >&2)
+	make -j ${PARALLEL_MAKE_JOBS:=16} O=$BUILD_DIR LOCALVERSION=-$SCHEDULER_ID dtbs 2> >(tee -a $RESULT_DIR/compile.log >&2)
 fi
 
 # If config will be booted later, debian package and devicetrees
-# need to be created and stored in $RESULT
+# need to be created and stored in $RESULT_DIR
 if [ $BUILDONLY -eq 0 ]
 then
-	make -j ${PARALLEL_MAKE_JOBS:=16} O=$BUILD LOCALVERSION=-$SCHEDULER_ID ${BUILD_TARGET:-bindeb-pkg} 2> >(tee $RESULT/package.log >&2)
+	make -j ${PARALLEL_MAKE_JOBS:=16} O=$BUILD_DIR LOCALVERSION=-$SCHEDULER_ID ${BUILD_TARGET:-bindeb-pkg} 2> >(tee $RESULT_DIR/package.log >&2)
 
-	if [ -d $BUILD/arch/${ARCH}/boot/dts ]
+	if [ -d $BUILD_DIR/arch/${ARCH}/boot/dts ]
 	then
-		tar cJf $RESULT/dtbs-${SCHEDULER_ID}.tar.xz --exclude 'dts/.*' -C $BUILD/arch/${ARCH}/boot dts
+		tar cJf $RESULT_DIR/dtbs-${SCHEDULER_ID}.tar.xz --exclude 'dts/.*' -C $BUILD_DIR/arch/${ARCH}/boot dts
 	fi
-	cp *deb $RESULT/
+	cp *deb $RESULT_DIR/
 fi
 ''';
 
-			writeFile file:"${getEnv("RESULT")}/compile-script.sh", text:script_content;
-			sh ". ${getEnv("RESULT")}/compile-script.sh";
+			writeFile file:"${resultdir}/compile-script.sh", text:script_content;
+			sh ". ${resultdir}/compile-script.sh";
 
 			def linuximage = "${config}/${overlay}";
 			stash(name: linuximage.replaceAll('/','_'),
