@@ -20,6 +20,7 @@ private runner(Map global, String target, String cyclictest) {
 	loadgen?.trim();
 	interval = helper.getEnv("INTERVAL");
 	limit = helper.getEnv("LIMIT");
+	duration = helper.getEnv("DURATION");
 
 	println("cyclictest-runner: ${target} ${cyclictest} ${interval} ${limit}\n${loadgen}");
 
@@ -30,7 +31,18 @@ private runner(Map global, String target, String cyclictest) {
 
 	dir(cyclictestdir) {
 		deleteDir();
-		helper.runShellScript("cyclictest/cyclictest.sh");
+		content = """#! /bin/bash
+
+# Exit bash script on error:
+set -e
+
+${loadgen ?: 'true'} &
+
+# Output needs to be available in Jenkins as well - use tee
+sudo cyclictest -q -m -Sp99 -D${duration} -i${interval} -h${limit} -b${limit} --notrace 2> >(tee histogram.log >&2) | tee histogram.dat
+""";
+		writeFile file:"histogram.sh", text:content;
+		sh ". histogram.sh";
 	}
 
 	archiveArtifacts("${cyclictestdir}/histogram.*");
