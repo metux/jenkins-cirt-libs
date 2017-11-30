@@ -86,20 +86,25 @@ BUILDONLY=${fileExists(".env/compile/env/"+arch+"-"+configFile.getName()+"-"+ove
 
 BUILDARGS="-j ${MAKE_PARALLEL}  O=${BUILD_DIR} LOCALVERSION=-${LOCALVERSION}"
 
-echo "compiletest-runner #${LOCALVERSION} $ARCH/$CONFIGNAME (stderr)" > $RESULT_DIR/compile.log
-make $BUILDARGS 2> >(tee -a $RESULT_DIR/compile.log >&2)
+# 2 Logfiles: compile log file and package build log file
+LOGFILE=${RESULT_DIR}/compile.log
+LOGFILE_PKG=${RESULT_DIR}/package.log
+
+echo "compiletest-runner #${LOCALVERSION} $ARCH/$CONFIGNAME (stderr)" > $LOGFILE
+make $BUILDARGS 2> >(tee -a $LOGFILE >&2)
 
 # Make devicetree binaries?
 if [ xtrue = x"$MKDTBS" ]
 then
-	make $BUILDARGS dtbs 2> >(tee -a $RESULT_DIR/compile.log >&2)
+	make $BUILDARGS dtbs 2> >(tee -a $LOGFILE >&2)
 fi
 
 # If config will be booted later, debian package and devicetrees
 # need to be created and stored in $RESULT_DIR
 if [ $BUILDONLY -eq 0 ]
 then
-	make $BUILDARGS ${BUILD_TARGET:-bindeb-pkg} 2> >(tee $RESULT_DIR/package.log >&2)
+	echo "compiletest-runner #${LOCALVERSION} $ARCH/$CONFIGNAME ${BUILD_TARGET:bindeb-pkg} (stderr)" > $LOGFILE_PKG
+	make $BUILDARGS ${BUILD_TARGET:-bindeb-pkg} 2> >(tee -a $LOGFILE_PKG >&2)
 
 	if [ -d $BUILD_DIR/arch/${ARCH}/boot/dts ]
 	then
