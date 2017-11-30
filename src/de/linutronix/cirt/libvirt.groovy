@@ -78,7 +78,7 @@ static online(String target, String reason) {
 		def computer = slave.computer
 		if (computer.name == target) {
 			if (computer.isOnline()) {
-				throw new hudson.AbortException("Target ${computer.name} is offline. Abort.")
+				throw new hudson.AbortException("Target ${computer.name} is online. Abort.")
 			}
 			println("Online ${computer.name}: ${reason}");
 			computer.doToggleOffline("${reason}")
