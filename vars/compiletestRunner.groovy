@@ -75,7 +75,8 @@ set -e
 ${exports}
 export ARCH=${arch}
 
-SCHEDULER_ID=${getEnv("SCHEDULER_ID")}
+MAKE_PARALLEL=${env.PARALLEL_MAKE_JOBS ?: '16'}
+LOCALVERSION=${env.BUILD_NUMBER}
 CONFIGNAME=${configFile.getName()}
 overlay=${overlay}
 BUILD_DIR=${builddir}
@@ -83,24 +84,26 @@ RESULT_DIR=${resultdir}
 BUILDONLY=${fileExists(".env/compile/env/"+arch+"-"+configFile.getName()+"-"+overlay+".properties") == "true" ? 1 : 0}
 """+'''
 
-echo "compiletest-runner #$BUILD_NUMBER $ARCH/$CONFIGNAME (stderr)" > $RESULT_DIR/compile.log
-make -j ${PARALLEL_MAKE_JOBS:=16} O=$BUILD_DIR LOCALVERSION=-$SCHEDULER_ID 2> >(tee -a $RESULT_DIR/compile.log >&2)
+BUILDARGS="-j ${MAKE_PARALLEL}  O=${BUILD_DIR} LOCALVERSION=-${LOCALVERSION}"
+
+echo "compiletest-runner #${LOCALVERSION} $ARCH/$CONFIGNAME (stderr)" > $RESULT_DIR/compile.log
+make $BUILDARGS 2> >(tee -a $RESULT_DIR/compile.log >&2)
 
 # Make devicetree binaries?
 if [ xtrue = x"$MKDTBS" ]
 then
-	make -j ${PARALLEL_MAKE_JOBS:=16} O=$BUILD_DIR LOCALVERSION=-$SCHEDULER_ID dtbs 2> >(tee -a $RESULT_DIR/compile.log >&2)
+	make $BUILDARGS dtbs 2> >(tee -a $RESULT_DIR/compile.log >&2)
 fi
 
 # If config will be booted later, debian package and devicetrees
 # need to be created and stored in $RESULT_DIR
 if [ $BUILDONLY -eq 0 ]
 then
-	make -j ${PARALLEL_MAKE_JOBS:=16} O=$BUILD_DIR LOCALVERSION=-$SCHEDULER_ID ${BUILD_TARGET:-bindeb-pkg} 2> >(tee $RESULT_DIR/package.log >&2)
+	make $BUILDARGS ${BUILD_TARGET:-bindeb-pkg} 2> >(tee $RESULT_DIR/package.log >&2)
 
 	if [ -d $BUILD_DIR/arch/${ARCH}/boot/dts ]
 	then
-		tar cJf $RESULT_DIR/dtbs-${SCHEDULER_ID}.tar.xz --exclude 'dts/.*' -C $BUILD_DIR/arch/${ARCH}/boot dts
+		tar cJf $RESULT_DIR/dtbs-${LOCALVERSION}.tar.xz --exclude 'dts/.*' -C $BUILD_DIR/arch/${ARCH}/boot dts
 	fi
 	cp *deb $RESULT_DIR/
 fi
