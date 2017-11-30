@@ -46,9 +46,21 @@ private runner(Map global, String repo, String branch,
 				unstash(global.STASH_COMPILECONF);
 			}
 
+			/* Unstash and apply test-description patch queue */
 			unstash(global.STASH_PATCHES);
 			sh("[ -d patches ] && quilt push -a");
-			runShellScript("compiletest/gittags.sh");
+
+			/* Extract gittag information for db entry */
+			dir(resultdir) {
+				sh """echo "TAGS_COMMIT=\$(git rev-parse HEAD)" >> gittags.properties""";
+				sh """echo "TAGS_COMMIT=\$(git describe HEAD)" >> gittags.properties""";
+			}
+
+			/* Create builddir and create empty .config */
+			/* TODO: better solution for an empty builddir (new File(NAME).mkdir())? */
+			dir(builddir) {
+				sh '''touch .config''';
+			}
 
 			String[] properties = [".env/environment.properties",
 					       ".env/compile/env/${arch}.properties",
