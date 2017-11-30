@@ -67,7 +67,10 @@ private runner(Map global, String repo, String branch,
 					       "compile/gittags.properties"];
 
 			add2environment(properties);
-			runShellScript("compiletest/preparekernel.sh");
+
+			prepconfig = libraryResource('de/linutronix/cirt/compiletest/preparekernel.sh');
+			writeFile file:"prepconfig.sh", text:prepconfig;
+			sh ". prepconfig.sh ${config} ${overlay} ${resultdir} ${builddir} ${env.BUILD_NUMBER}";
 
 			/*
 			 * Use environment file and add an "export "

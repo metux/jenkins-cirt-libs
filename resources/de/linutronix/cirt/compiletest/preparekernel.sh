@@ -4,12 +4,26 @@
 # abort skript on error
 set -e
 
-CONFFILE=".env/compile/configs/${config}"
-OVERLAYFILE=".env/compile/overlays/${overlay}"
-ARCHOVERLAYFILE=".env/compile/overlays/${ARCH}/${overlay}"
+if [ $# -ne 5 ]
+then
+	echo "usage error: $0 <config> <overlay> <resultdir> <builddir> <buildnumber>"
+	exit 1
+fi
 
-tovr=$RESULT/tmpoverlay
-oscript=$RESULT/overlayscript
+CONFIG=$1
+OVERLAY=$2
+RESULT_DIR=$3
+BUILD_DIR=$4
+BUILD_NUMBER=$5
+
+ARCH=$(dirname $CONFIG)
+
+CONFFILE=".env/compile/configs/$CONFIG"
+OVERLAYFILE=".env/compile/overlays/$OVERLAY"
+ARCHOVERLAYFILE=".env/compile/overlays/${ARCH}/$OVERLAY"
+
+tovr=$RESULT_DIR/tmpoverlay
+oscript=$RESULT_DIR/overlayscript
 
 handle_overlay() {
 	if [ ! -f $OVERLAYFILE ]
@@ -52,7 +66,7 @@ handle_overlay() {
 	./$oscript
 
 	# use olddefconfig instead of oldconfig to avoid failures due to new konfig variables
-	make ARCH=$ARCH O=$BUILD olddefconfig
+	make ARCH=$ARCH O=$BUILD_DIR olddefconfig
 
 	# Check if all parameters were set propertly, set err=1 if a option was not set
 	# abort script after all parameters were checked
@@ -60,7 +74,7 @@ handle_overlay() {
 	while read line
 	do
 		option=$(echo $line | sed -e 's@.*CONFIG_\([^ =]*\).*@\1@')
-		ret=$(scripts/config --file ${BUILD}/.config --state $option)
+		ret=$(scripts/config --file ${BUILD_DIR}/.config --state $option)
 		case $line in
 			"# CONFIG_"*" is not set")
 				if [[ $ret != "undef" ]] && [[ $ret != "n" ]]
@@ -109,17 +123,17 @@ cat << _EOF_ > $oscript
 set -e
 
 # --file option needs to be before any other option
-scripts/config --file ${BUILD}/.config \\
+scripts/config --file ${BUILD_DIR}/.config \\
 _EOF_
 
-CONF=$(basename $config)
+CONF=$(basename $CONFIG)
 
 echo "Generate Kernel configuration $ARCH $CONF"
 
 if [ -f "$CONFFILE" ]
 then
-	cp "$CONFFILE" "$BUILD/.config"
-	make ARCH=$ARCH O=$BUILD olddefconfig
+	cp "$CONFFILE" "$BUILD_DIR/.config"
+	make ARCH=$ARCH O=$BUILD_DIR olddefconfig
 else
 	case "$CONF" in
 	'allnoconfig')
@@ -140,7 +154,7 @@ else
 		fi
 		;;
 	esac
-	make ARCH=$ARCH O=$BUILD $CONF
+	make ARCH=$ARCH O=$BUILD_DIR $CONF
 fi
 
 
@@ -151,8 +165,8 @@ then
 fi
 
 # store config in results
-cp $BUILD/.config $RESULT/config
+cp $BUILD_DIR/.config $RESULT_DIR/config
 
 # Create and store defconfig
-make -j 8 O=$BUILD LOCALVERSION=-$SCHEDULER_ID savedefconfig
-cp $BUILD/defconfig $RESULT/
+make -j 8 O=$BUILD_DIR LOCALVERSION=-$BUILD_NUMBER savedefconfig
+cp $BUILD_DIR/defconfig $RESULT_DIR/
