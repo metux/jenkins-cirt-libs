@@ -74,6 +74,7 @@ set -e
 
 # Required environment settings
 ${exports}
+# TODO: The ARCH define will be removed, when ARCH is defined in ARCH.properties file
 export ARCH=${arch}
 
 MAKE_PARALLEL=${env.PARALLEL_MAKE_JOBS ?: '16'}
@@ -83,6 +84,8 @@ BUILD_DIR=${builddir}
 RESULT_DIR=${resultdir}
 
 # TODO: Replace linuximageprop with linuximage, when property files are with _ instead of -
+# TODO: BUILDONLY should depend on BUILD_TARGET; move this logic in environment handling;
+#	possible solution: per config environment file, which overwrites arch settings?
 BUILDONLY=${fileExists(".env/compile/env/"+linuximageprop+".properties") == "true" ? 1 : 0}
 """+'''
 
@@ -91,6 +94,15 @@ BUILDARGS="-j ${MAKE_PARALLEL}  O=${BUILD_DIR} LOCALVERSION=-${LOCALVERSION}"
 # 2 Logfiles: compile log file and package build log file
 LOGFILE=${RESULT_DIR}/compile.log
 LOGFILE_PKG=${RESULT_DIR}/package.log
+
+# Information for reproducability
+if [[ ! -d $BUILD_DIR || ! -d $RESULT_DIR ]]
+then
+	echo "Directories $BUILD_DIR and $RESULT_DIR are required"
+	exit 1
+else
+	echo "Reminder: Proper kernel config stored in $BUILD_DIR/.config and patches applied?"
+fi
 
 echo "compiletest-runner #${LOCALVERSION} $CONFIG_OVERLAY (stderr)" > $LOGFILE
 make $BUILDARGS 2> >(tee -a $LOGFILE >&2)
