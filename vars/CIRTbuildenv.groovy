@@ -30,7 +30,6 @@ private String list2prop(String list, String var) {
 private String handleLists(String globalenv) {
 	def lists = list2prop('env/compile.list', 'CONFIGS');
 	lists += list2prop('env/overlay.list', 'OVERLAYS');
-	lists += list2prop('env/boottest.list', 'BOOTTESTS_ALL');
 	lists += list2prop('env/email.list', 'RECIPIENTS');
 
 	return new String(globalenv + lists);
@@ -251,9 +250,10 @@ private String getValue(String content, String key) {
 }
 
 private buildCompileEnv(String globalenv) {
-	List boottests = getValue(globalenv, "BOOTTESTS_ALL").split();
 	List configs = getValue(globalenv, "CONFIGS").split();
 	List overlays = getValue(globalenv, "OVERLAYS").split();
+	bootlist = list2prop('env/boottest.list', 'BOOTTESTS_ALL');
+	List boottests = getValue(bootlist, "BOOTTESTS_ALL").split();
 
 	buildArchCompileEnv(configs);
 
