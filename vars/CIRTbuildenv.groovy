@@ -184,6 +184,22 @@ private buildCyclictestEnv(List boottests) {
         }
 }
 
+private prepareCompBootEnv(String config, String overlay) {
+        helper = new helper();
+        helper.extraEnv("config", config);
+        helper.extraEnv("overlay", overlay);
+        helper.runShellScript("environment/compile-boot.sh");
+}
+
+private buildCompBootEnv(String[] configs, String[] overlays) {
+        for (int i = 0; i < configs.size(); i++) {
+                for (int j = 0; j < overlays.size(); j++) {
+                        prepareCompBootEnv(configs.getAt(i),
+                                   overlays.getAt(j));
+                }
+        }
+}
+
 private buildCompileEnv() {
 	helper = new helper();
 	String[] properties = ["environment.properties"];
@@ -196,7 +212,7 @@ private buildCompileEnv() {
 	buildArchCompileEnv(configs);
 
 	if (boottests) {
-		CIRTbuildenvCompileBoot(configs as String[], overlays as String[]);
+		buildCompBootEnv(configs as String[], overlays as String[]);
 		buildCyclictestEnv(boottests);
 	}
 }
