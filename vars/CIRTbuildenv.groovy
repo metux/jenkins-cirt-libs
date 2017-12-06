@@ -8,16 +8,50 @@ package de.linutronix.cirt;
 import de.linutronix.cirt.inputcheck;
 
 private buildEnv(String commit) {
-	String[] properties = ["environment.properties"];
+	try {
+		findFiles(glob: '**/.properties')
+		error("found .properties files in testdescription. CIRTbuildenv failed.");
+	} catch(Exception ex) {
+		println("clean workspace.");
+	}
+
+	sh """\
+#! /bin/bash
+
+# Exit bash script on error:
+set -e
+
+cp env/global environment.properties
+
+echo "SCHEDULER_ID=${env.BUILD_NUMBER}" >> environment.properties
+echo "ENV_ID=${BUILD_NUMBER}" >> environment.properties
+echo "CI_RT_URL=${env.BUILD_URL}" >> environment.properties
+
+# Insert PUBLICREPO if it is not set (default value is true)
+grep -q '^PUBLICREPO' environment.properties || echo "PUBLICREPO=true" >> environment.properties
+
+# If parameter COMMIT is not empty (only whitespace means empty) overwrite existing COMMIT entry
+# or add it
+
+if [ ! -z "${commit}" ]
+then
+        grep -q '^COMMIT' environment.properties && sed -i "s/^COMMIT.*/COMMIT=${COMMIT}" || echo "COMMIT=${commit}" >> environment.properties
+fi
+
+BRANCH=$(grep -q '^BRANCH' environment.properties | sed 's/[^=]*=//')
+COMMIT=$(grep -q '^COMMIT' environment.properties | sed 's/[^=]*=//')
+
+if [ x"${COMMIT}" == x ]
+then
+    echo "GIT_CHECKOUT=${BRANCH}" >> environment.properties
+else
+    echo "GIT_CHECKOUT=${COMMIT}" >> environment.properties
+fi
+
+"""
+
 	helper = new helper();
 
-	helper.extraEnv("SCHEDULER_ID", "${env.BUILD_NUMBER}");
-	helper.extraEnv("CI_RT_URL", "${env.BUILD_URL}");
-	helper.runShellScript("environment/base.sh");
-	helper.add2environment(properties);
-
-	helper.extraEnv("COMMIT", "${commit}");
-	helper.runShellScript("environment/setcommit.sh");
 	handleLists(helper);
 
 	String[] boottests = helper.getEnv("BOOTTESTS_ALL").split();
