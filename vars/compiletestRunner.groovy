@@ -18,7 +18,7 @@ private runner(Map global, String repo, String branch,
 
 	resultdir = "compile";
 	builddir = "build";
-	def linuximageprop = "${config}/${overlay}".replaceAll('/','-');
+	def linuximage = "${config}/${overlay}".replaceAll('/','_');
 	arch = config.split("/")[0];
 
 	dir(compiledir) {
@@ -77,14 +77,13 @@ ${exports}
 
 MAKE_PARALLEL=${env.PARALLEL_MAKE_JOBS ?: '16'}
 LOCALVERSION=${env.BUILD_NUMBER}
-CONFIG_OVERLAY=${linuximageprop}
+CONFIG_OVERLAY=${linuximage}
 BUILD_DIR=${builddir}
 RESULT_DIR=${resultdir}
 
-# TODO: Replace linuximageprop with linuximage, when property files are with _ instead of -
 # TODO: BUILDONLY should depend on BUILD_TARGET; move this logic in environment handling;
 #	possible solution: per config environment file, which overwrites arch settings?
-BUILDONLY=${fileExists(".env/compile/env/"+linuximageprop+".properties") == "true" ? 1 : 0}
+BUILDONLY=${fileExists(".env/compile/env/"+linuximage+".properties") == "true" ? 1 : 0}
 """+'''
 
 BUILDARGS="-j ${MAKE_PARALLEL}  O=${BUILD_DIR} LOCALVERSION=-${LOCALVERSION}"
@@ -129,8 +128,7 @@ fi
 		writeFile file:"${resultdir}/compile-script.sh", text:script_content;
 		sh ". ${resultdir}/compile-script.sh";
 
-		def linuximage = "${config}/${overlay}";
-		stash(name: linuximage.replaceAll('/','_'),
+		stash(name: linuximage,
 		      includes: 'compile/linux-image*deb',
 		      allowEmpty: true);
 	}

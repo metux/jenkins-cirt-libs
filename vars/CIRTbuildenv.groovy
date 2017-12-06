@@ -200,7 +200,7 @@ CONFIGNAME=$(basename $config)
 
 BOOTTESTS=" "
 
-echo "building compile/env/$ARCH-$CONFIGNAME-$overlay.properties"
+echo "building compile/env/$ARCH_$CONFIGNAME_$overlay.properties"
 
 # Read env/boottest.list line by line
 while read line
@@ -222,10 +222,10 @@ do
     esac
 done < env/boottest.list
 
-# create compile/env/$ARCH-$NAME-$OVERLAY.properties file
+# create compile/env/$ARCH_$NAME_$OVERLAY.properties file
 if [ ! -z $BOOTTESTS ]
 then
-    echo "BOOTTESTS=$BOOTTESTS" > compile/env/$ARCH-$CONFIGNAME-$overlay.properties
+    echo "BOOTTESTS=$BOOTTESTS" > compile/env/${ARCH}_${CONFIGNAME}_${overlay}.properties
 else
     echo "No boottest configured: Property file creation skipped."
 fi

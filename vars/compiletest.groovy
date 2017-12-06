@@ -10,7 +10,7 @@ import de.linutronix.cirt.inputcheck;
 private compileJob(Map global, String config, String overlay,
 		   String repo, String branch) {
 	/* fileExists is a relative query! */
-	configbootprop = "compile/env/${config.replaceAll('/','-')}-${overlay}.properties";
+	configbootprop = "compile/env/${config.replaceAll('/','_')}_${overlay}.properties";
 	boot = fileExists "${configbootprop}";
 
 	if (boot) {
