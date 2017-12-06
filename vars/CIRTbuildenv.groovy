@@ -73,17 +73,68 @@ private buildGlobalEnv(String commit) {
 	writeFile(file:"environment.properties", text:globalenv);
 }
 
+private buildArchCompileEnv(List configs)
+{
+	def compilefile;
+	def compile;
+
+	if (fileExists("compile/env/compile")) {
+		compilefile = readFile("compile/env/compile");
+		compile = compilefile.split('\n').collectEntries { entry ->
+			def pair = entry.split('=');
+			[(pair.first()): pair.last()]
+		}
+	} else {
+		compile = [:];
+	}
+
+	/* Build a List of archs by manipulating the config list */
+	def archs = configs.collect { config ->
+		/* remove the trailing part of config to get arch */
+		config = config.replaceAll("/.*", "");
+		config
+	}
+
+	archs.unique().each { arch ->
+		def archcompile;
+
+		if (fileExists("compile/env/${arch}")) {
+			def archcompilefile = readFile("compile/env/${arch}");
+			archcompile = archcompilefile.split('\n')
+			.collectEntries { entry ->
+				def pair = entry.split('=')
+				[(pair.first()): pair.last()]
+			}
+		} else {
+			archcompile = [:];
+		}
+
+		archcompile['ARCH'] = arch;
+
+		def map = compile;
+		def properties = "";
+		archcompile.each { k, v -> map[k] = v }
+		map.each { k, v ->
+			if (k)
+				properties += "${k.trim()}=${v.trim()}\n";
+		}
+		writeFile(file:"compile/env/${arch}.properties", text:properties);
+	}
+}
+
 private buildCompileEnv() {
 	helper = new helper();
 	handleLists(helper);
 
-	String[] boottests = helper.getEnv("BOOTTESTS_ALL").split();
-	String[] configs = helper.getEnv("CONFIGS").split();
-	String[] overlays = helper.getEnv("OVERLAYS").split();
+	List boottests = helper.getEnv("BOOTTESTS_ALL").split();
+	List configs = helper.getEnv("CONFIGS").split();
+	List overlays = helper.getEnv("OVERLAYS").split();
+
+	buildArchCompileEnv(configs);
 
 	if (boottests) {
-		CIRTbuildenvCompileBoot(configs, overlays);
-		CIRTbuildenvCyclictest(boottests);
+		CIRTbuildenvCompileBoot(configs as String[], overlays as String[]);
+		CIRTbuildenvCyclictest(boottests as String[]);
 	}
 }
 
@@ -95,7 +146,6 @@ private handleLists(helper helper) {
 
 	String[] properties = ["environment.properties"];
 	helper.add2environment(properties);
-	helper.runShellScript("environment/arch_env_magic.py");
 }
 
 private buildEnv(String commit) {
