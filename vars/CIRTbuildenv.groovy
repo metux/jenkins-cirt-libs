@@ -7,23 +7,33 @@ package de.linutronix.cirt;
 
 import de.linutronix.cirt.inputcheck;
 
-private list2prop(String listfile, String name, String propertyfile) {
-	String listtext = readFile(listfile);
+private String list2prop(String list, String var) {
+	if (!fileExists(list)) {
+		return "${var}=\n";
+	}
 
-	entry = listtext.replaceAll("#.*\n", " ").replaceAll("\n", " ");
-	val = "${name} = ${entry}";
+	def content;
+	try {
+		content = readFile(list);
+	} catch(Exception ex) {
+		println(ex);
+		error("readFile >${list}< failed");
+	}
 
-	sh("echo \"${val}\" >> ${propertyfile}");
+	content = content.replaceAll("#.*", "");
+	content = content.replace("\n", " ");
+	content = var + "=" + content.trim() + "\n";
+
+	return new String(content);
 }
 
-private handleLists(helper helper) {
-	list2prop("env/compile.list", "CONFIGS", "environment.properties");
-	list2prop("env/overlay.list", "OVERLAYS", "environment.properties");
-	list2prop("env/boottest.list", "BOOTTESTS_ALL", "environment.properties");
-	list2prop("env/email.list", "RECIPIENTS", "environment.properties");
+private String handleLists(String globalenv) {
+	def lists = list2prop('env/compile.list', 'CONFIGS');
+	lists += list2prop('env/overlay.list', 'OVERLAYS');
+	lists += list2prop('env/boottest.list', 'BOOTTESTS_ALL');
+	lists += list2prop('env/email.list', 'RECIPIENTS');
 
-	String[] properties = ["environment.properties"];
-	helper.add2environment(properties);
+	return new String(globalenv + lists);
 }
 
 private String prepareGlobalEnv(String globalenv, String commit) {
@@ -70,6 +80,14 @@ ENV_ID=${BUILD_NUMBER}
 CI_RT_URL=${env.BUILD_URL}
 ${publicrepo}
 """
+
+	/*
+	 * Drop all references to branch and commit after use.
+	 * Otherwise JIT and GC may not be finished with cleanup
+	 * and throw an serialization error exception in readFile().
+	 */
+	commit = null;
+	branch = null;
 
 	/* remove all empty lines and whitespaces around [=] */
 	globalenv = globalenv.replaceAll(/(?m)^\s*\n/, "");
@@ -142,16 +160,18 @@ private buildArchCompileEnv(List configs)
 }
 
 private prepareCyclictestEnv(String boottest) {
-        String[] properties = ["${boottest}.properties"];
-        helper = new helper();
+	def content = readFile(boottest);
 
-        sh("cp ${boottest} ${boottest}.properties");
-        helper.add2environment(properties);
-        list2prop(helper.getEnv("CYCLICTEST"), "CYCLICTESTS",
-		  "${boottest}.properties");
-        helper.add2environment(properties);
+	cyclictest = content =~ /\s*CYCLICTEST\s*=.*/
+	cyclictest = cyclictest[0] - ~/\s*CYCLICTEST\s*=/
 
-        cyclictests = helper.getEnv("CYCLICTESTS").split();
+	cyclictests = list2prop(cyclictest, "CYCLICTESTS");
+	content += cyclictests;
+	cyclictests -= ~/\s*CYCLICTESTS\s*=/
+	cyclictests = cyclictests.split();
+
+	writeFile(file:"${boottest}.properties", text:content);
+
         for (int i = 0; i < cyclictests.size(); i++) {
                 cyclictest = cyclictests.getAt(i);
                 sh("cp ${cyclictest} ${cyclictest}.properties");
@@ -166,7 +186,8 @@ private buildCyclictestEnv(List boottests) {
 
 private buildCompileEnv() {
 	helper = new helper();
-	handleLists(helper);
+	String[] properties = ["environment.properties"];
+	helper.add2environment(properties);
 
 	List boottests = helper.getEnv("BOOTTESTS_ALL").split();
 	List configs = helper.getEnv("CONFIGS").split();
