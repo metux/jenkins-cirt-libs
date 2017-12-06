@@ -96,7 +96,7 @@ ${publicrepo}
 	return handleLists(globalenv);
 }
 
-private buildGlobalEnv(String commit) {
+private String buildGlobalEnv(String commit) {
 	try {
 		findFiles(glob: '**/.properties')
 		error("found .properties files in testdescription. CIRTbuildenv failed.");
@@ -108,6 +108,8 @@ private buildGlobalEnv(String commit) {
 	globalenv = prepareGlobalEnv(globalenv, commit);
 
 	writeFile(file:"environment.properties", text:globalenv);
+
+	return new String(globalenv);
 }
 
 private buildArchCompileEnv(List configs)
@@ -238,14 +240,20 @@ private buildCompBootEnv(List configs, List overlays) {
         }
 }
 
-private buildCompileEnv() {
-	helper = new helper();
-	String[] properties = ["environment.properties"];
-	helper.add2environment(properties);
+private String getValue(String content, String key) {
+	def value = content =~ /\s*${key}\s*=.*/
+	if (value.count) {
+		value = value[0] - ~/\s*${key}\s*=/
+	} else {
+		value = " ";
+	}
+	return new String(value);
+}
 
-	List boottests = helper.getEnv("BOOTTESTS_ALL").split();
-	List configs = helper.getEnv("CONFIGS").split();
-	List overlays = helper.getEnv("OVERLAYS").split();
+private buildCompileEnv(String globalenv) {
+	List boottests = getValue(globalenv, "BOOTTESTS_ALL").split();
+	List configs = getValue(globalenv, "CONFIGS").split();
+	List overlays = getValue(globalenv, "OVERLAYS").split();
 
 	buildArchCompileEnv(configs);
 
@@ -256,8 +264,8 @@ private buildCompileEnv() {
 }
 
 private buildEnv(String commit) {
-	buildGlobalEnv(commit);
-	buildCompileEnv();
+	String globalenv = buildGlobalEnv(commit);
+	buildCompileEnv(globalenv);
 }
 
 def call(String commit, Map global) {
