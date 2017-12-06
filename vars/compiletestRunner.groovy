@@ -74,8 +74,6 @@ set -e
 
 # Required environment settings
 ${exports}
-# TODO: The ARCH define will be removed, when ARCH is defined in ARCH.properties file
-export ARCH=${arch}
 
 MAKE_PARALLEL=${env.PARALLEL_MAKE_JOBS ?: '16'}
 LOCALVERSION=${env.BUILD_NUMBER}
