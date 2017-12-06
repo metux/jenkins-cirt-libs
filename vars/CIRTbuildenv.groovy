@@ -16,6 +16,16 @@ private list2prop(String listfile, String name, String propertyfile) {
 	sh("echo \"${val}\" >> ${propertyfile}");
 }
 
+private handleLists(helper helper) {
+	list2prop("env/compile.list", "CONFIGS", "environment.properties");
+	list2prop("env/overlay.list", "OVERLAYS", "environment.properties");
+	list2prop("env/boottest.list", "BOOTTESTS_ALL", "environment.properties");
+	list2prop("env/email.list", "RECIPIENTS", "environment.properties");
+
+	String[] properties = ["environment.properties"];
+	helper.add2environment(properties);
+}
+
 private String prepareGlobalEnv(String globalenv, String commit) {
 	/* no need to set PUBLICREPO if found earlier */
 	def m = globalenv =~ /\s*PUBLICREPO\s*=.*/
@@ -168,16 +178,6 @@ private buildCompileEnv() {
 		CIRTbuildenvCompileBoot(configs as String[], overlays as String[]);
 		buildCyclictestEnv(boottests);
 	}
-}
-
-private handleLists(helper helper) {
-	list2prop("env/compile.list", "CONFIGS", "environment.properties");
-	list2prop("env/overlay.list", "OVERLAYS", "environment.properties");
-	list2prop("env/boottest.list", "BOOTTESTS_ALL", "environment.properties");
-	list2prop("env/email.list", "RECIPIENTS", "environment.properties");
-
-	String[] properties = ["environment.properties"];
-	helper.add2environment(properties);
 }
 
 private buildEnv(String commit) {
