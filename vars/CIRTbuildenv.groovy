@@ -122,6 +122,29 @@ private buildArchCompileEnv(List configs)
 	}
 }
 
+private prepareCyclictestEnv(String boottest) {
+        String[] properties = ["${boottest}.properties"];
+        helper = new helper();
+
+        sh("cp ${boottest} ${boottest}.properties");
+        helper.add2environment(properties);
+        helper.list2prop(helper.getEnv("CYCLICTEST"), "CYCLICTESTS",
+                         "${boottest}.properties");
+        helper.add2environment(properties);
+
+        cyclictests = helper.getEnv("CYCLICTESTS").split();
+        for (int i = 0; i < cyclictests.size(); i++) {
+                cyclictest = cyclictests.getAt(i);
+                sh("cp ${cyclictest} ${cyclictest}.properties");
+        }
+}
+
+private buildCyclictestEnv(List boottests) {
+	boottests.each { boottest ->
+		prepareCyclictestEnv(boottest);
+        }
+}
+
 private buildCompileEnv() {
 	helper = new helper();
 	handleLists(helper);
@@ -134,7 +157,7 @@ private buildCompileEnv() {
 
 	if (boottests) {
 		CIRTbuildenvCompileBoot(configs as String[], overlays as String[]);
-		CIRTbuildenvCyclictest(boottests as String[]);
+		buildCyclictestEnv(boottests);
 	}
 }
 
