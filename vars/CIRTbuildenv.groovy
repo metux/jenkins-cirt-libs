@@ -7,6 +7,15 @@ package de.linutronix.cirt;
 
 import de.linutronix.cirt.inputcheck;
 
+private list2prop(String listfile, String name, String propertyfile) {
+	String listtext = readFile(listfile);
+
+	entry = listtext.replaceAll("#.*\n", " ").replaceAll("\n", " ");
+	val = "${name} = ${entry}";
+
+	sh("echo \"${val}\" >> ${propertyfile}");
+}
+
 private String prepareGlobalEnv(String globalenv, String commit) {
 	/* no need to set PUBLICREPO if found earlier */
 	def m = globalenv =~ /\s*PUBLICREPO\s*=.*/
@@ -128,8 +137,8 @@ private prepareCyclictestEnv(String boottest) {
 
         sh("cp ${boottest} ${boottest}.properties");
         helper.add2environment(properties);
-        helper.list2prop(helper.getEnv("CYCLICTEST"), "CYCLICTESTS",
-                         "${boottest}.properties");
+        list2prop(helper.getEnv("CYCLICTEST"), "CYCLICTESTS",
+		  "${boottest}.properties");
         helper.add2environment(properties);
 
         cyclictests = helper.getEnv("CYCLICTESTS").split();
@@ -162,10 +171,10 @@ private buildCompileEnv() {
 }
 
 private handleLists(helper helper) {
-	helper.list2prop("env/compile.list", "CONFIGS", "environment.properties");
-	helper.list2prop("env/overlay.list", "OVERLAYS", "environment.properties");
-	helper.list2prop("env/boottest.list", "BOOTTESTS_ALL", "environment.properties");
-	helper.list2prop("env/email.list", "RECIPIENTS", "environment.properties");
+	list2prop("env/compile.list", "CONFIGS", "environment.properties");
+	list2prop("env/overlay.list", "OVERLAYS", "environment.properties");
+	list2prop("env/boottest.list", "BOOTTESTS_ALL", "environment.properties");
+	list2prop("env/email.list", "RECIPIENTS", "environment.properties");
 
 	String[] properties = ["environment.properties"];
 	helper.add2environment(properties);

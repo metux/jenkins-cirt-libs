@@ -82,12 +82,3 @@ def getEnv() {
 def getEnv(String name) {
 	return environment[name];
 }
-
-def list2prop(String listfile, String name, String propertyfile) {
-	String listtext = readFile(listfile);
-
-	entry = listtext.replaceAll("#.*\n", " ").replaceAll("\n", " ");
-	val = "${name} = ${entry}";
-
-	sh("echo \"${val}\" >> ${propertyfile}");
-}
