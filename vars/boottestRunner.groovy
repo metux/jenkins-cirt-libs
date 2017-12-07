@@ -69,6 +69,26 @@ private writeBootlog(String seriallog, String bootlog) {
 	writeFile file:bootlog, text:boot_content;
 }
 
+private checkOnline(String target) {
+	def versionfile = "kversion";
+
+	/* Test for the proper kernel version */
+	sh 'echo $(ssh '+target+' uname -r | sed \"s/.*-rt[0-9]\\+-\\([0-9]\\+\\).*$/\\1/\") > '+versionfile;
+	version = readFile(versionfile).trim();
+
+	if (version != env.BUILD_NUMBER) {
+		println("The booted kernel version \"${version}\" on target ${target} differs from version under test.");
+
+		/* Reboot into default kernel */
+		sh """ssh ${target} \"sudo shutdown -r -t +1\" || \
+(virsh -c ${hypervisor} destroy ${target}; sleep 1; virsh -c ${hypervisor} start ${target})""";
+
+		error message:"Boottest failed";
+	}
+
+	println("Target is back");
+	sh "echo \$(ssh ${target} cat /proc/cmdline) > cmdline";
+}
 
 private runner(Map global, String boottest) {
 	unstash(global.STASH_PRODENV);
@@ -90,7 +110,6 @@ private runner(Map global, String boottest) {
 	resultdir = "boottest";
 
 	hypervisor = libvirt.getURI(target);
-	helper.extraEnv("HYPERVISOR", hypervisor);
 	println("URI = ${hypervisor}");
 
 	dir(boottestdir) {
@@ -106,56 +125,12 @@ private runner(Map global, String boottest) {
 
 			/* Create result directory */
 			dir(resultdir) {
-				writeFile file:'boottest.sh', text:'';
+				writeFile file:"serialboot-default.log", text:'';
 			}
 
 			rebootTarget(hypervisor, target, seriallog);
 
-			def content = """\
-#! /bin/bash
-
-# Exit bash script on error:
-set -e
-
-# Required environment setting
-export TARGET=${target}
-export SCHEDULER_ID=${env.BUILD_NUMBER}
-export HYPERVISOR=${hypervisor}
-""" + '''
-
-export KERNCMDLINE="none"
-
-echo "Check if target is back online..."
-export TVERSION=$(ssh -o ConnectTimeout=10 -o ConnectionAttempts=6 $TARGET uname -r | sed "s/.*-rt[0-9]\\+-\\([0-9]\\+\\).*$/\\1/")
-
-if [ "$TVERSION" != "$SCHEDULER_ID" ]
-then
-	ssh $TARGET "sudo shutdown -r -t +1" || \
-	(virsh -c "$HYPERVISOR" destroy $TARGET; sleep 1; virsh -c "$HYPERVISOR" start $TARGET)
-	echo "The booted kernel version $TVERSION on target $TARGET differs from version $SCHEDULER_ID under test."
-	export PASS="0"
-else
-	sleep 30
-	echo "Target is back."
-
-	export PASS="1"
-	export KERNCMDLINE="$(ssh $TARGET cat /proc/cmdline)"
-
-	if [ x"$KERNCMDLINE" == x ]
-	then
-		export PASS="0"
-    fi
-fi
-
-
-# Do not stop here. Set marker "target_reboot.failed" and wait some time to settle the hardware
-if [ "$PASS" = "0" ]
-then
-	touch "target_reboot.failed"
-fi
-''';
-			writeFile file:"${resultdir}/boottest.sh", text:content;
-			sh "${content}";
+			checkOnline(target);
 
 			writeBootlog(seriallog, bootlog);
 
