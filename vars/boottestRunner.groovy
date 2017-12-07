@@ -10,11 +10,22 @@ import de.linutronix.cirt.libvirt;
 
 private rebootTarget(String hypervisor, String target, String seriallog) {
 	def pidfile = "seriallogpid";
+	def virshoutput = "virshoutput";
 	off_message = "Reboot to Kernel build (${env.BUILD_TAG})";;
 
 	/* Start serial console logging */
-	sh """virsh -c ${hypervisor} consolelog ${target} --force --logfile ${seriallog} """+'''&
-+echo $! >'''+""" ${pidfile}"""
+	/* TODO: Cleanup error handling; it is not the best solution */
+	writeFile file: virshoutput, text: '';
+	sh """virsh -c ${hypervisor} consolelog ${target} --force --logfile ${seriallog} 2> ${virshoutput} || echo \"virsh error!\" >> ${virshoutput}"""+'''&
+echo $! >'''+""" ${pidfile}"""
+
+	/* Wait 5 seconds to be sure that virsh workes properly and error file was written*/
+	sleep(time: 5, unit: 'SECONDS');
+	output = readFile(virshoutput).trim()
+	if (output) {
+		println("Virsh console logging Problem (target properly written and logfile writeable?): "+output);
+		/* TODO: throw exception; IT Problem */
+	}
 
 	/* Set taget offline */
 	libvirt.offline(target, off_message);
