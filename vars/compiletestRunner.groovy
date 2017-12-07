@@ -141,9 +141,11 @@ def call(Map global, String repo, String branch,
 	 String config, String overlay) {
 	try {
 		inputcheck.check(global);
-		dir("compiletestRunner") {
-			deleteDir()
-			runner(global, repo, branch, config, overlay);
+		node ('kernel') {
+			dir("compiletestRunner") {
+				deleteDir()
+				runner(global, repo, branch, config, overlay);
+			}
 		}
 	} catch(Exception ex) {
                 println("compiletest runner failed:");
