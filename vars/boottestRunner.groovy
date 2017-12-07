@@ -8,6 +8,36 @@ package de.linutronix.cirt;
 import de.linutronix.cirt.inputcheck;
 import de.linutronix.cirt.libvirt;
 
+private rebootTarget(String hypervisor, String target, String seriallog) {
+	def pidfile = "seriallogpid";
+	off_message = "Reboot to Kernel build (${env.BUILD_TAG})";;
+
+	/* Start serial console logging */
+	sh """virsh -c ${hypervisor} consolelog ${target} --force --logfile ${seriallog} """+'''&
++echo $! >'''+""" ${pidfile}"""
+
+	/* Set taget offline */
+	libvirt.offline(target, off_message);
+
+	/*
+	 * Brave New World: systemd kills the network before ssh
+	 * terminates, therefore -t +1, witch is really now + a bit;
+	 */
+	sh "ssh ${target} \"sudo shutdown -r -t +1\"";
+
+	/*
+	 * Sleep more than 5 Minutes - it is the Jenkins slave ping
+	 * timeout. Please look at:
+	 * https://wiki.jenkins.io/display/JENKINS/Ping+Thread.
+	 * Furthermore, all targets should be online afterwards.
+	 */
+	sleep(time: 330, unit: 'SECONDS');
+
+	println("kill seriallog");
+	def pid = readFile(pidfile).trim();
+	sh "kill ${pid}";
+}
+
 private writeBootlog(String seriallog, String bootlog) {
 	kexec_delimiter = "--- CI-RT Booting Testkernel Kexec ---";
 
@@ -63,12 +93,13 @@ private runner(Map global, String boottest) {
 
 			targetprep(global, target, kernel);
 
-			libvirt.offline(target, helptext);
-
 			/* Create result directory */
 			dir(resultdir) {
 				writeFile file:'boottest.sh', text:'';
 			}
+
+			rebootTarget(hypervisor, target, seriallog);
+
 			def content = """\
 #! /bin/bash
 
@@ -79,28 +110,12 @@ set -e
 export TARGET=${target}
 export SCHEDULER_ID=${env.BUILD_NUMBER}
 export HYPERVISOR=${hypervisor}
-
-# log of serial console
-export SERIALLOG=${seriallog}
 """ + '''
-
-virsh -c "$HYPERVISOR" consolelog $TARGET --force --logfile $SERIALLOG &
-export SERLOGPID=$!
 
 export KERNCMDLINE="none"
 
-# Brave New World: systemd kills the network before ssh terminates, therefore -t +1, witch is really now + a bit.
-echo "Reboot Target..."
-ssh $TARGET "sudo shutdown -r -t +1"
-
-echo "Wait some time for target reboot..."
-sleep 300
-
 echo "Check if target is back online..."
 export TVERSION=$(ssh -o ConnectTimeout=10 -o ConnectionAttempts=6 $TARGET uname -r | sed "s/.*-rt[0-9]\\+-\\([0-9]\\+\\).*$/\\1/")
-
-# terminate serial logging
-kill $SERLOGPID
 
 if [ "$TVERSION" != "$SCHEDULER_ID" ]
 then
