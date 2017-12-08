@@ -33,11 +33,13 @@ private runboottest(Map global, String[] boottests) {
 def call(Map global, String[] boottests) {
 	 try {
 		 inputcheck.check(global);
-		 dir("boottest") {
-			deleteDir();
-			if (boottests == null)
-				return;
-			runboottest(global, boottests);
+		 node('master') {
+			dir("boottest") {
+				deleteDir();
+				if (boottests == null)
+					return;
+				runboottest(global, boottests);
+			}
 		 }
 	 } catch(Exception ex) {
 		 println("boottest failed:");
