@@ -90,24 +90,8 @@ private checkOnline(String target) {
 	sh "echo \$(ssh ${target} cat /proc/cmdline) > cmdline";
 }
 
-private runner(Map global, String boottest) {
-	unstash(global.STASH_PRODENV);
-	helper = new helper();
-	String[] properties = ["environment.properties",
-			       "${boottest}.properties"];
-	helper.add2environment(properties);
-
+private runner(Map global, helper helper, String boottest, String boottestdir, String resultdir) {
 	target = helper.getEnv("TARGET");
-	if (!target?.trim()) {
-		error("environment TARGET not set. Abort.");
-	}
-
-	config = helper.getEnv("CONFIG");
-	overlay = helper.getEnv("OVERLAY");
-	kernel = "${config}/${overlay}";
-	/* Last subdirectory "boottest" for results is created by scripts */
-	boottestdir = "results/${kernel}/${target}";
-	resultdir = "boottest";
 
 	hypervisor = libvirt.getURI(target);
 	println("URI = ${hypervisor}");
@@ -147,8 +131,6 @@ private runner(Map global, String boottest) {
 			}
 		}
 	}
-	archiveArtifacts(artifacts: "${boottestdir}/${resultdir}/**",
-			 fingerprint: true);
 }
 
 def call(Map global, String boottest) {
@@ -156,7 +138,27 @@ def call(Map global, String boottest) {
 		inputcheck.check(global);
 		dir("boottestRunner") {
 			deleteDir();
-			runner(global, boottest);
+
+			unstash(global.STASH_PRODENV);
+			helper = new helper();
+			String[] properties = ["${boottest}.properties"];
+			helper.add2environment(properties);
+
+			target = helper.getEnv("TARGET");
+			/* TODO: move environment checks into CIRTbuildenv */
+			if (!target?.trim()) {
+				error("environment TARGET not set. Abort.");
+			}
+
+			config = helper.getEnv("CONFIG");
+			overlay = helper.getEnv("OVERLAY");
+			kernel = "${config}/${overlay}";
+
+			/* Last subdirectory "boottest" for results is created by scripts */
+			boottestdir = "results/${kernel}/${target}";
+			resultdir = "boottest";
+
+			runner(global, helper, boottest, boottestdir, resultdir);
 		}
 	} catch(Exception ex) {
 		println("boottest \"${boottest}\" failed:");
@@ -164,7 +166,12 @@ def call(Map global, String boottest) {
 		println(ex.getMessage());
 		println(ex.getStackTrace());
 		error("boottest \"${boottest}\" failed.");
-        }
+	} finally {
+		dir("boottestRunner") {
+			archiveArtifacts(artifacts: "${boottestdir}/${resultdir}/**",
+					 fingerprint: true);
+		}
+	}
 }
 
 def call(String... params) {
