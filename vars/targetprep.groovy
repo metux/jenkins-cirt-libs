@@ -16,6 +16,24 @@ def call(Map global, String target, String kernel) {
 				deleteDir();
 				unstash(kernel.replaceAll('/','_'));
 
+				/*
+				 * Check if there are more or less than a single
+				 * debian package in stash
+				 */
+				debfile = findFiles(glob: "compile/*.deb");
+				if (debfile.size() != 1) {
+					error message:"Not only a single deb file in stash. Abort";
+				}
+
+				/*
+				 * clear the directory where test images, dtbs
+				 * and initrds are stored
+				 */
+				sh 'rm -rf /boot/jenkins/*';
+
+				/* Install package */
+				sh "sudo dpkg -i ${debfile[0]}";
+
 				script_content = """\
 #! /bin/bash
 
@@ -26,24 +44,6 @@ set -e
 SCHEDULER_ID=${env.BUILD_NUMBER}
 
 """+'''
-
-# clear the directory where test images, dtbs and initrds are stored
-rm -rf /boot/jenkins/*
-
-# Have a look for the linux image that should be tested (the package
-# was copied by Build Step before); if package is not available exit
-# with non zero exit code, else install package
-
-export DEBPKG=$(find compile/ -name "*linux-image*-${SCHEDULER_ID}-*.deb")
-export DEB=$(basename $DEBPKG)
-
-if [ x = x"$DEBPKG" ]
-then
-	echo "No Kernel package found"
-	exit 1
-fi
-
-sudo dpkg -i $DEBPKG
 
 # Copy linux image and initrd to /boot/jenkins directory. If
 # /boot/jenkins/bzImage exists, a kexec is executed with the kernel
