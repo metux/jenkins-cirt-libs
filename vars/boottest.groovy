@@ -31,23 +31,23 @@ private runboottest(Map global, String[] boottests) {
 }
 
 def call(Map global, String[] boottests) {
-	 try {
-		 inputcheck.check(global);
-		 node('master') {
+	try {
+		inputcheck.check(global);
+		node('master') {
 			dir("boottest") {
 				deleteDir();
 				if (boottests == null)
 					return;
 				runboottest(global, boottests);
 			}
-		 }
-	 } catch(Exception ex) {
-		 println("boottest failed:");
-		 println(ex.toString());
-		 println(ex.getMessage());
-		 println(ex.getStackTrace());
-		 error("boottest failed.");
-        }
+		}
+	} catch(Exception ex) {
+		println("boottest failed:");
+		println(ex.toString());
+		println(ex.getMessage());
+		println(ex.getStackTrace());
+		error("boottest failed.");
+	}
 }
 
 def call(Map global) {
@@ -56,5 +56,5 @@ def call(Map global) {
 
 def call(String... params) {
         println params
-        error("Unknown signature. Abort.");
+	error("Unknown signature. Abort.");
 }
