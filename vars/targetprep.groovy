@@ -34,36 +34,26 @@ def call(Map global, String target, String kernel) {
 				/* Install package */
 				sh "sudo dpkg -i ${debfile[0]}";
 
-				script_content = """\
-#! /bin/bash
+				/*
+				 * Copy Linux image and initrd to /boot/jenkins
+				 * directory. If /boot/jenkins/bzImage exists, a
+				 * kexec is executed with the kernel that should
+				 * be tested when leaving a runlevel (see
+				 * /etc/rc.local on the target).
+				 */
+				sh 'find /boot/ -maxdepth 1 -regextype posix-extended -regex \'^/boot/vmlinuz.*-'+env.BUILD_ID+'(-.*|$)\' -exec cp {} /boot/jenkins/bzImage \\;';
+				sh 'find /boot/ -maxdepth 1 -regextype posix-extended -regex \'^/boot/initrd.img-.*-'+env.BUILD_ID+'(-.*|$)\' -exec cp {} /boot/jenkins/initrd \\;';
 
-# Exit bash script on error:
-set -e
+				/*
+				 * Purge the debian package. In case of a reboot
+				 * the default (and properly working kernel
+				 * version is booted).
+				 */
+				debname = "${debfile[0]}".replaceAll(/.*\//, '').replaceAll(/_.*/, '');
+				sh "sudo dpkg --purge ${debname}";
 
-# Export required environment setting
-SCHEDULER_ID=${env.BUILD_NUMBER}
-
-"""+'''
-
-# Copy linux image and initrd to /boot/jenkins directory. If
-# /boot/jenkins/bzImage exists, a kexec is executed with the kernel
-# that should be tested when leaving a runlevel
-# (see /etc/rc.local on target).
-find /boot/ -maxdepth 1 -regextype posix-extended -regex '^/boot/vmlinuz.*-'${SCHEDULER_ID}'(-.*|$)' -exec cp {} /boot/jenkins/bzImage \;
-if [ -f /boot/initrd.img-*-${SCHEDULER_ID} ]
-then
-	cp /boot/initrd.img-*-${SCHEDULER_ID} /boot/jenkins/initrd
-fi
-
-# Purge the debian package. In case of a reboot the default (and
-# properly working kernel version is booted)
-sudo dpkg --purge ${DEB%%_*}
-
-# Unpack devicetrees
-find . -name dtbs-${SCHEDULER_ID}.tar.xz -exec tar xJf {} -C /boot/jenkins \;
-'''
-				writeFile file:"preperation.sh", text:script_content;
-				sh "${script_content}";
+				/* Unpack devicetrees */
+				sh 'find . -name dtbs-'+env.BUILD_ID+'.tar.xz -exec tar xJf {} -C /boot/jenkins \\;';
 			}
 		}
 	} catch(Exception ex) {
