@@ -149,12 +149,7 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 				checkOnline(target, true);
 
 				cyclictests = helper.getEnv("CYCLICTESTS").split();
-				node('master') {
-					/*
-					 * cyclictest is executed on another
-					 * node, workspace doesn't has to be
-					 * changed.
-					 */
+				if (cyclictests) {
 					cyclictest(global, target, cyclictests);
 				}
 			} catch (Exception ex) {
