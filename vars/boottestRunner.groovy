@@ -10,10 +10,15 @@ import de.linutronix.cirt.libvirt;
 
 import hudson.AbortException
 
-private rebootTarget(String hypervisor, String target, String seriallog) {
+private rebootTarget(String hypervisor, String target, String seriallog, Boolean testboot) {
 	def pidfile = "seriallogpid";
 	def virshoutput = "virshoutput";
-	off_message = "Reboot to Kernel build (${env.BUILD_TAG})";;
+
+	if (testboot) {
+		off_message = "Reboot to Kernel build (${env.BUILD_TAG})";;
+	} else {
+		off_message = "Reboot to default Kernel";
+	}
 
 	/* Start serial console logging */
 	/* TODO: Cleanup error handling; it is not the best solution */
@@ -35,8 +40,15 @@ echo $! >'''+""" ${pidfile}"""
 	/*
 	 * Brave New World: systemd kills the network before ssh
 	 * terminates, therefore -t +1, witch is really now + a bit;
+	 * force reboot only when booting into default kernel.
 	 */
-	sh "ssh ${target} \"sudo shutdown -r -t +1\"";
+	println("Reboot Target ${target}");
+	if (testboot) {
+		sh "ssh ${target} \"sudo shutdown -r -t +1\"";
+	} else {
+		sh """ssh ${target} \"sudo shutdown -r -t +1\" || \
+(virsh -c ${hypervisor} destroy ${target}; sleep 1; virsh -c ${hypervisor} start ${target})""";
+	}
 
 	/*
 	 * Sleep more than 5 Minutes - it is the Jenkins slave ping
@@ -71,10 +83,14 @@ private writeBootlog(String seriallog, String bootlog) {
 	writeFile file:bootlog, text:boot_content;
 }
 
-private checkOnline(String target) {
+private checkOnline(String target, Boolean testboot) {
 	def versionfile = "kversion";
 
-	on_message = "In test kernel of Kernel build (${env.BUILD_TAG})";
+	if (testboot) {
+		on_message = "In test kernel of Kernel build (${env.BUILD_TAG})";
+	} else {
+		on_message = "In default Kernel";
+	}
 
 	try {
 		/* Test the ssh connection if the target is back online */
@@ -92,15 +108,12 @@ private checkOnline(String target) {
 	sh 'echo $(ssh '+target+' uname -r | sed \"s/.*-rt[0-9]\\+-\\([0-9]\\+\\).*$/\\1/\") > '+versionfile;
 	version = readFile(versionfile).trim();
 
-	if (version != env.BUILD_NUMBER) {
+	if (testboot && version != env.BUILD_NUMBER) {
 		println("The booted kernel version \"${version}\" on target ${target} differs from version under test.");
-
-		/* Reboot into default kernel */
-		sh """ssh ${target} \"sudo shutdown -r -t +1\" || \
-(virsh -c ${hypervisor} destroy ${target}; sleep 1; virsh -c ${hypervisor} start ${target})""";
 
 		error message:"Boottest failed! IT Problem!";
 	}
+	/* TODO add a check for the default Kernel */
 
 	println("Target is back");
 	sh "echo \$(ssh ${target} cat /proc/cmdline) > cmdline";
@@ -115,6 +128,7 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 	dir(boottestdir) {
 		deleteDir();
 		lock(target) {
+			seriallog_default = "${resultdir}/serialboot-default.log"
 			seriallog = "${resultdir}/serialboot.log";
 			bootlog = "${resultdir}/boot.log";
 
@@ -127,20 +141,32 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 				writeFile file:"serialboot-default.log", text:'';
 			}
 
-			rebootTarget(hypervisor, target, seriallog);
+			try {
+				rebootTarget(hypervisor, target, seriallog, true);
 
-			writeBootlog(seriallog, bootlog);
+				writeBootlog(seriallog, bootlog);
 
-			checkOnline(target);
+				checkOnline(target, true);
 
-			cyclictests = helper.getEnv("CYCLICTESTS").split();
-			node('master') {
-				/*
-				 * cyclictest is executed on another
-				 * node, workspace doesn't has to be
-				 * changed.
-				 */
-				cyclictest(global, target, cyclictests);
+				cyclictests = helper.getEnv("CYCLICTESTS").split();
+				node('master') {
+					/*
+					 * cyclictest is executed on another
+					 * node, workspace doesn't has to be
+					 * changed.
+					 */
+					cyclictest(global, target, cyclictests);
+				}
+			} catch (Exception ex) {
+				println("boottest \"${boottest}\" failed:");
+				println(ex.toString());
+				println(ex.getMessage());
+				println(ex.getStackTrace());
+				error("boottest \"${boottest}\" failed.");
+			} finally {
+				println("Reboot into default kernel");
+				rebootTarget(hypervisor, target, seriallog_default, false);
+				checkOnline(target, false);
 			}
 		}
 	}
