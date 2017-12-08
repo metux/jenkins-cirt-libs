@@ -8,6 +8,8 @@ package de.linutronix.cirt;
 import de.linutronix.cirt.inputcheck;
 import de.linutronix.cirt.libvirt;
 
+import hudson.AbortException
+
 private rebootTarget(String hypervisor, String target, String seriallog) {
 	def pidfile = "seriallogpid";
 	def virshoutput = "virshoutput";
@@ -72,6 +74,20 @@ private writeBootlog(String seriallog, String bootlog) {
 private checkOnline(String target) {
 	def versionfile = "kversion";
 
+	on_message = "In test kernel of Kernel build (${env.BUILD_TAG})";
+
+	try {
+		/* Test the ssh connection if the target is back online */
+		sh "ssh -o ConnectTimeout=10 -o ConnectionAttempts=6 ${target} uname -r";
+
+		/* Set target online */
+		libvirt.online(target, on_message);
+	} catch (AbortException ex) {
+		println("Target ${target} is not online after 310 seconds");
+
+		error message:"Target ${target} is not online after 310 seconds";
+	}
+
 	/* Test for the proper kernel version */
 	sh 'echo $(ssh '+target+' uname -r | sed \"s/.*-rt[0-9]\\+-\\([0-9]\\+\\).*$/\\1/\") > '+versionfile;
 	version = readFile(versionfile).trim();
@@ -83,7 +99,7 @@ private checkOnline(String target) {
 		sh """ssh ${target} \"sudo shutdown -r -t +1\" || \
 (virsh -c ${hypervisor} destroy ${target}; sleep 1; virsh -c ${hypervisor} start ${target})""";
 
-		error message:"Boottest failed";
+		error message:"Boottest failed! IT Problem!";
 	}
 
 	println("Target is back");
@@ -102,7 +118,6 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 			seriallog = "${resultdir}/serialboot.log";
 			bootlog = "${resultdir}/boot.log";
 
-			helptext = "Reboot to Kernel build (${env.BUILD_TAG})";
 			libvirt.wait4onlineTimeout(target, 120);
 
 			targetprep(global, target, kernel);
@@ -117,8 +132,6 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 			writeBootlog(seriallog, bootlog);
 
 			checkOnline(target);
-
-			libvirt.online(target, helptext);
 
 			cyclictests = helper.getEnv("CYCLICTESTS").split();
 			node('master') {
