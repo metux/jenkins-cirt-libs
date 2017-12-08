@@ -114,9 +114,9 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 
 			rebootTarget(hypervisor, target, seriallog);
 
-			checkOnline(target);
-
 			writeBootlog(seriallog, bootlog);
+
+			checkOnline(target);
 
 			libvirt.online(target, helptext);
 
