@@ -43,6 +43,10 @@ static wait4onlineTimeout(String target, Integer timeout) {
 			def i;
 			for (i = 0; i < timeout; i++) {
 				if (computer.isOffline()) {
+					/*
+					 * Groovy sleep implementation is used in this context;
+					 * time is specified in milliseconds
+					 */
 					sleep(1000);
 				}
 			}
