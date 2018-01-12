@@ -3,8 +3,6 @@
  * CI-RT library kernel build test
  */
 
-package de.linutronix.cirt;
-
 import de.linutronix.cirt.inputcheck;
 
 private String list2prop(String list, String var) {

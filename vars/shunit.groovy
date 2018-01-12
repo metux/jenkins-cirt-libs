@@ -3,8 +3,6 @@
  * CI-RT library kernel build test
  */
 
-package de.linutronix.lib4lib;
-
 import de.linutronix.lib4lib.logger;
 
 def call(String classname, String name, String cmd) {

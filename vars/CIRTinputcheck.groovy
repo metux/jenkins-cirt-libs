@@ -3,8 +3,6 @@
  * CI-RT common input checks
  */
 
-package de.linutronix.cirt;
-
 def call(Map global) {
 	node ('master') {
 		if (!global.STASH_PATCHES?.trim()) {

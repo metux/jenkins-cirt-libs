@@ -3,29 +3,29 @@
  * CI-RT library kernel build test
  */
 
-package de.linutronix.cirt;
+import de.linutronix.cirt.helper;
 
 private runner(Map global, String target, String cyclictest) {
 
 	unstash(global.STASH_PRODENV);
 
-	helper = new helper();
+	h = new helper();
 	String[] properties = ["environment.properties",
 			       "boot/${target}.properties",
 			       "${cyclictest}.properties"];
 
-	helper.add2environment(properties);
+	h.add2environment(properties);
 
-	loadgen = helper.getEnv("LOADGEN");
+	loadgen = h.getEnv("LOADGEN");
 	loadgen?.trim();
-	interval = helper.getEnv("INTERVAL");
-	limit = helper.getEnv("LIMIT");
-	duration = helper.getEnv("DURATION");
+	interval = h.getEnv("INTERVAL");
+	limit = h.getEnv("LIMIT");
+	duration = h.getEnv("DURATION");
 
 	println("cyclictest-runner: ${target} ${cyclictest} ${interval} ${limit}\n${loadgen}");
 
-	config = helper.getEnv("CONFIG");
-	overlay = helper.getEnv("OVERLAY");
+	config = h.getEnv("CONFIG");
+	overlay = h.getEnv("OVERLAY");
 	kernel = "${config}/${overlay}";
 	cyclictestdir = "results/${kernel}/${target}/${cyclictest}";
 

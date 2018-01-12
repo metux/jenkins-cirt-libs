@@ -3,8 +3,6 @@
  * CI-RT library kernel build test
  */
 
-package de.linutronix.cirt;
-
 import de.linutronix.cirt.inputcheck;
 
 def call(Map global, String target, String kernel) {

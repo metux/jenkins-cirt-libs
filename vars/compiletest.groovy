@@ -3,8 +3,7 @@
  * CI-RT library kernel build test
  */
 
-package de.linutronix.cirt;
-
+import de.linutronix.cirt.helper;
 import de.linutronix.cirt.inputcheck;
 
 private compileJob(Map global, String config, String overlay,
@@ -16,12 +15,12 @@ private compileJob(Map global, String config, String overlay,
 	if (boot) {
 		String[] boottestprops = [configbootprop];
 		String[] boottests;
-		helper = new helper();
+		h = new helper();
 
-		helper.add2environment(boottestprops);
+		h.add2environment(boottestprops);
 		try {
-			helper.showEnv();
-			boottests = helper.getEnv("BOOTTESTS").split();
+			h.showEnv();
+			boottests = h.getEnv("BOOTTESTS").split();
 		} catch (java.lang.NullPointerException e) {
 			boottests = [];
 		}
@@ -90,16 +89,16 @@ def call(Map global) {
 			deleteDir();
 			unstash(global.STASH_PRODENV);
 			String[] properties = ["environment.properties"];
-			helper = new helper();
+			h = new helper();
 
-			helper.add2environment(properties);
+			h.add2environment(properties);
 			/*
 			 * TODO: Check, if properties file has all
 			 * information will be later moved into
 			 * environment verification
 			 */
 			try {
-				environment = helper.getEnv();
+				environment = h.getEnv();
 				configs = environment['CONFIGS'].split();
 				overlays = environment['OVERLAYS'].split();
 				gitrepo = environment['GITREPO'];

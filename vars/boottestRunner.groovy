@@ -3,8 +3,7 @@
  * CI-RT library kernel build test
  */
 
-package de.linutronix.cirt;
-
+import de.linutronix.cirt.helper;
 import de.linutronix.cirt.inputcheck;
 import de.linutronix.cirt.libvirt;
 
@@ -174,25 +173,25 @@ def call(Map global, String boottest) {
 			deleteDir();
 
 			unstash(global.STASH_PRODENV);
-			helper = new helper();
+			h = new helper();
 			String[] properties = ["${boottest}.properties"];
-			helper.add2environment(properties);
+			h.add2environment(properties);
 
-			target = helper.getEnv("TARGET");
+			target = h.getEnv("TARGET");
 			/* TODO: move environment checks into CIRTbuildenv */
 			if (!target?.trim()) {
 				error("environment TARGET not set. Abort.");
 			}
 
-			config = helper.getEnv("CONFIG");
-			overlay = helper.getEnv("OVERLAY");
+			config = h.getEnv("CONFIG");
+			overlay = h.getEnv("OVERLAY");
 			kernel = "${config}/${overlay}";
 
 			/* Last subdirectory "boottest" for results is created by scripts */
 			boottestdir = "results/${kernel}/${target}";
 			resultdir = "boottest";
 
-			runner(global, helper, boottest, boottestdir, resultdir);
+			runner(global, h, boottest, boottestdir, resultdir);
 		}
 	} catch(Exception ex) {
 		println("boottest \"${boottest}\" failed:");

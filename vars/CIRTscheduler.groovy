@@ -2,8 +2,6 @@
  * CI-RT cyclictest runner job
  */
 
-package de.linutronix.cirt;
-
 import de.linutronix.cirt.inputcheck;
 
 def call(body) {
