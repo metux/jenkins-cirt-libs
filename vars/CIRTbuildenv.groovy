@@ -297,7 +297,8 @@ def call(String commit, Map global) {
 				stash(includes: '**/*.properties',
 				      name: global.STASH_PRODENV);
 				stash(includes: 'patches/**',
-				      name: global.STASH_PATCHES);
+				      name: global.STASH_PATCHES,
+				      allowEmpty: true);
 				stash(includes: 'compile/configs/**, compile/overlays/**',
 				      name: global.STASH_COMPILECONF);
 			}
