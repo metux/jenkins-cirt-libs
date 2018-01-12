@@ -5,6 +5,18 @@
 
 import de.linutronix.cirt.inputcheck;
 
+private String readCleanFile(String filename) {
+	content = readFile(filename);
+
+	/* remove all lines beginning with # (comments only) */
+	content = content.replaceAll(/(?m)^#.*\n/, "");
+
+	/* remove all empty lines */
+	content = content.replaceAll(/(?m)^\s*\n/, "");
+
+	return content;
+}
+
 private String list2prop(String list, String var) {
 	if (!fileExists(list)) {
 		return "${var}=\n";
@@ -12,10 +24,10 @@ private String list2prop(String list, String var) {
 
 	def content;
 	try {
-		content = readFile(list);
+		content = readCleanFile(list);
 	} catch(Exception ex) {
 		println(ex);
-		error("readFile >${list}< failed");
+		error("readCleanFile >${list}< failed");
 	}
 
 	content = content.replaceAll("#.*", "");
@@ -81,7 +93,7 @@ ${publicrepo}
 	/*
 	 * Drop all references to branch and commit after use.
 	 * Otherwise JIT and GC may not be finished with cleanup
-	 * and throw an serialization error exception in readFile().
+	 * and throw an serialization error exception in readCleanFile().
 	 */
 	commit = null;
 	branch = null;
@@ -101,7 +113,7 @@ private String buildGlobalEnv(String commit) {
 		println("clean workspace.");
 	}
 
-	def globalenv = readFile("env/global");
+	def globalenv = readCleanFile("env/global");
 	globalenv = prepareGlobalEnv(globalenv, commit);
 
 	writeFile(file:"environment.properties", text:globalenv);
@@ -115,7 +127,7 @@ private buildArchCompileEnv(List configs)
 	def compile;
 
 	if (fileExists("compile/env/compile")) {
-		compilefile = readFile("compile/env/compile");
+		compilefile = readCleanFile("compile/env/compile");
 		compile = compilefile.split('\n').collectEntries { entry ->
 			def pair = entry.split('=');
 			[(pair.first()): pair.last()]
@@ -135,7 +147,7 @@ private buildArchCompileEnv(List configs)
 		def archcompile;
 
 		if (fileExists("compile/env/${arch}")) {
-			def archcompilefile = readFile("compile/env/${arch}");
+			def archcompilefile = readCleanFile("compile/env/${arch}");
 			archcompile = archcompilefile.split('\n')
 			.collectEntries { entry ->
 				def pair = entry.split('=')
@@ -159,7 +171,7 @@ private buildArchCompileEnv(List configs)
 }
 
 private prepareCyclictestEnv(String boottest) {
-	def content = readFile(boottest);
+	def content = readCleanFile(boottest);
 
 	cyclictest = content =~ /\s*CYCLICTEST\s*=.*/
 	cyclictest = cyclictest[0] - ~/\s*CYCLICTEST\s*=/
