@@ -180,7 +180,7 @@ private prepareCyclictestEnv(String boottest) {
 private buildCyclictestEnv(List boottests) {
 	boottests.each { boottest ->
 		prepareCyclictestEnv(boottest);
-        }
+	}
 }
 
 private prepareCompBootEnv(String config, String overlay) {
@@ -202,39 +202,39 @@ echo "building compile/env/$ARCH_$CONFIGNAME_$overlay.properties"
 # Read env/boottest.list line by line
 while read line
 do
-    case $line in
-        # ignore comments
-        "#"*)
-        ;&
-        "")
-            continue
-            ;;
-        # find $config and $overlay in all other boottest files
-        *)
-            if grep -q -G "^CONFIG[ ]*=[ ]*${config}$" $line && grep -q -G "^OVERLAY[ ]*=[ ]*${overlay}$" $line
-            then
-                BOOTTESTS="$BOOTTESTS $line"
-            fi
-            ;;
-    esac
+	case $line in
+		# ignore comments
+		"#"*)
+			;&
+		"")
+			continue
+			;;
+		# find $config and $overlay in all other boottest files
+		*)
+			if grep -q -G "^CONFIG[ ]*=[ ]*${config}$" $line && grep -q -G "^OVERLAY[ ]*=[ ]*${overlay}$" $line
+			then
+				BOOTTESTS="$BOOTTESTS $line"
+			fi
+			;;
+	esac
 done < env/boottest.list
 
 # create compile/env/$ARCH_$NAME_$OVERLAY.properties file
 if [ ! -z $BOOTTESTS ]
 then
-    echo "BOOTTESTS=$BOOTTESTS" > compile/env/${ARCH}_${CONFIGNAME}_${overlay}.properties
+	echo "BOOTTESTS=$BOOTTESTS" > compile/env/${ARCH}_${CONFIGNAME}_${overlay}.properties
 else
-    echo "No boottest configured: Property file creation skipped."
+	echo "No boottest configured: Property file creation skipped."
 fi
 '''
 }
 
 private buildCompBootEnv(List configs, List overlays) {
-        configs.each { config ->
-                overlays.each { overlay ->
-                        prepareCompBootEnv(config, overlay);
-                }
-        }
+	configs.each { config ->
+		overlays.each { overlay ->
+			prepareCompBootEnv(config, overlay);
+		}
+	}
 }
 
 private String getValue(String content, String key) {
@@ -291,12 +291,12 @@ def call(String commit, Map global) {
 					 fingerprint: true);
 		}
 	} catch(Exception ex) {
-                println("CIRTbuildenv failed:");
-                println(ex.toString());
-                println(ex.getMessage());
-                println(ex.getStackTrace());
-                error("CIRTbuildenv failed.");
-        }
+		println("CIRTbuildenv failed:");
+		println(ex.toString());
+		println(ex.getMessage());
+		println(ex.getStackTrace());
+		error("CIRTbuildenv failed.");
+	}
 }
 
 def call(String... params) {
