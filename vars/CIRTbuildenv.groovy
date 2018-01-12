@@ -209,7 +209,7 @@ CONFIGNAME=$(basename $config)
 
 BOOTTESTS=" "
 
-echo "building compile/env/$ARCH_$CONFIGNAME_$overlay.properties"
+echo "building compile/env/${ARCH}_${CONFIGNAME}_${overlay}.properties"
 
 # Read env/boottest.list line by line
 while read line
