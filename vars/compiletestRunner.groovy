@@ -124,8 +124,9 @@ fi
 ''';
 
 		writeFile file:"${resultdir}/compile-script.sh", text:script_content;
-		sh ". ${resultdir}/compile-script.sh";
-
+		shunit("compile", "${config}/${overlay}",
+		       "bash ${resultdir}/compile-script.sh");
+		sh("mv pyjutest.xml ${resultdir}/");
 		stash(name: linuximage,
 		      includes: 'compile/linux-image*deb',
 		      allowEmpty: true);
