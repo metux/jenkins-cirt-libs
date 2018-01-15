@@ -116,7 +116,9 @@ private checkOnline(String target, Boolean testboot) {
 	/* TODO add a check for the default Kernel */
 
 	println("Target is back");
-	sh "echo \$(ssh ${target} cat /proc/cmdline) > cmdline";
+	if (testboot) {
+		sh "echo \$(ssh ${target} cat /proc/cmdline) > cmdline";
+	}
 }
 
 private runner(Map global, helper helper, String boottest, String boottestdir, String resultdir) {
@@ -168,13 +170,14 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 }
 
 def call(Map global, String boottest) {
+	def failed = false;
+	h = new helper();
 	try {
 		inputcheck.check(global);
 		dir("boottestRunner") {
 			deleteDir();
 
 			unstash(global.STASH_PRODENV);
-			h = new helper();
 			String[] properties = ["${boottest}.properties"];
 			h.add2environment(properties);
 
@@ -195,6 +198,7 @@ def call(Map global, String boottest) {
 			runner(global, h, boottest, boottestdir, resultdir);
 		}
 	} catch(Exception ex) {
+		failed = true;
 		println("boottest \"${boottest}\" failed:");
 		println(ex.toString());
 		println(ex.getMessage());
@@ -204,6 +208,16 @@ def call(Map global, String boottest) {
 		dir("boottestRunner") {
 			archiveArtifacts(artifacts: "${boottestdir}/${resultdir}/**",
 					 fingerprint: true);
+			script_content = libraryResource('de/linutronix/cirt/boottest/boottest2xml.py');
+			writeFile file:"boottest2xml", text:script_content;
+			if (failed) {
+				sh("python3 boottest2xml ${boottest} ${boottestdir} failure")
+			} else {
+				sh("python3 boottest2xml ${boottest} ${boottestdir}")
+			}
+			stash(name: boottest.replaceAll('/','_'),
+				  includes: "${boottestdir}/${resultdir}/pyjutest.xml, " +
+							"${boottestdir}/cmdline");
 		}
 	}
 }
