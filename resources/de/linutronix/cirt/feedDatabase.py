@@ -116,6 +116,33 @@ def parse_junit(filename):
         }
 
 
+def extract_cyclictest_data(props):
+    hist_data = []
+    thread_data = []
+    i = 0
+    while "hist_data" + str(i) in props:
+        data = props["hist_data" + str(i)].split(",")
+        hist_data.append({
+            "thread": data[0],
+            "latency": data[1],
+            "count": data[2],
+            "owner": data[3]
+            })
+        i += 1
+    i = 0
+    while "thread_data" + str(i) in props:
+        data = props["thread_data" + str(i)].split(",")
+        thread_data.append({
+            "thread": data[0],
+            "min": data[1],
+            "avg": data[2],
+            "max": data[3],
+            "owner": data[4]
+            })
+        i += 1
+    return hist_data, thread_data
+
+
 def get_current_time():
     today = datetime.utcnow()
     return today.strftime("%Y-%m-%d %H:%M:%S")
@@ -193,6 +220,50 @@ class Boottest (Base):
     bootdate = Column(TIMESTAMP)
     owner = Column(Text)
     bootlog = Column(LargeBinary)
+
+
+class Cyclictest (Base):
+    __tablename__ = 'cyclictest'
+    cyclictest_id = Column('id', Integer, primary_key=True)
+    description = Column(String(80))
+    duration = Column(Integer)
+    interval = Column(Integer)
+    min_ = Column('min', Integer)
+    avg = Column(Integer)
+    max_ = Column('max', Integer)
+    boottest_id = Column(Integer, ForeignKey('boottest.id'))
+    pass_ = Column('pass', Boolean)
+    threshold = Column(Integer)
+    testscript = Column(LargeBinary)
+    owner = Column(Text)
+    testlog = Column(LargeBinary)
+
+
+class Histogram (Base):
+    __tablename__ = 'histogram'
+    histogram_id = Column('id', Integer, primary_key=True)
+    thread = Column(Integer)
+    latency = Column(Integer)
+    count = Column(Integer)
+    cyclictest_id = Column(Integer, ForeignKey('cyclictest.id'))
+    owner = Column(Text)
+
+
+class Minavgmax (Base):
+    __tablename__ = 'minavgmax'
+    __table_args__ = (
+        PrimaryKeyConstraint('cyclictest_id', 'thread'),
+        {},
+    )
+    thread = Column(Integer)
+    cyclictest_id = Column(Integer, ForeignKey('cyclictest.id'))
+    min_ = Column('min', Integer)
+    avg = Column(Integer)
+    max_ = Column('max', Integer)
+    owner = Column(Text)
+    PrimaryKeyConstraint('id', 'version_id', name='mytable_pk')
+
+
 class CirtDB():
     def __init__(self, db_type, db_host, db_user, db_pass, db_name):
         db_string = "%s://%s:%s@%s/%s" % (db_type, db_user,
@@ -318,6 +389,52 @@ class CirtDB():
             s.commit()
             return new_boottest.boottest_id
 
+    def submit_cyclictest(self, cyclic_result,
+                          boot_id, entry_owner, props, system_out):
+        new_cyclictest = Cyclictest(
+            description=props["description"],
+            duration=props["duration"],
+            interval=props["interval"],
+            min_=props["min"],
+            avg=props["avg"],
+            max_=props["max"],
+            boottest_id=boot_id,
+            threshold=props["threshold"],
+            testscript=props["testscript"].encode("utf-8"),
+            pass_=(cyclic_result == "pass"),
+            owner=entry_owner,
+            testlog=system_out.encode("utf-8")
+            )
+        with session_scope(self.session) as s:
+            s.add(new_cyclictest)
+            s.commit()
+            return new_cyclictest.cyclictest_id
+
+    def submit_hist_data(self, hist_data, cyclic_id):
+        with session_scope(self.session) as s:
+            for hd in hist_data:
+                new_histogram = Histogram(
+                    thread=hd["thread"],
+                    latency=hd["latency"],
+                    count=hd["count"],
+                    owner=hd["owner"],
+                    cyclictest_id=cyclic_id
+                    )
+                s.add(new_histogram)
+
+    def submit_thread_data(self, thread_data, cyclic_id):
+        with session_scope(self.session) as s:
+            for td in thread_data:
+                new_minavgmax = Minavgmax(
+                    thread=td["thread"],
+                    min_=td["min"],
+                    avg=td["avg"],
+                    max_=td["max"],
+                    owner=td["owner"],
+                    cyclictest_id=cyclic_id
+                    )
+                s.add(new_minavgmax)
+
     def update_cirtscheduler(self, scheduler_id,
                              passed, first_run, last_run):
         with session_scope(self.session) as s:
@@ -405,6 +522,33 @@ for boottest in boottests:
             )
         all_tests_passed = all_tests_passed and \
             (junit_res["result"] == "pass")
+        cyclictests = listdir(
+            join(result_path, boottest, "cyclictest", boottest)
+                )
+        for cyclic in cyclictests:
+            cyclic_path = join(result_path, boottest, "cyclictest",
+                               boottest, cyclic)
+            junit_res = parse_junit(join(cyclic_path, "pyjutest.xml"))
+            cyclic_id = db.submit_cyclictest(
+                junit_res["result"],
+                boot_id, entry_owner,
+                junit_res["props"],
+                junit_res["system_out"]
+                )
+            all_tests_passed = all_tests_passed and \
+                (junit_res["result"] == "pass")
+            hist_data, thread_data = extract_cyclictest_data(
+                junit_res["props"]
+                )
+            db.submit_hist_data(
+                hist_data,
+                cyclic_id
+                )
+            db.submit_thread_data(
+                thread_data,
+                cyclic_id
+                )
+
 db.update_cirtscheduler(
     scheduler_id,
     all_tests_passed,
