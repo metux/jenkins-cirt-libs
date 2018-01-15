@@ -7,27 +7,28 @@ from os import environ as env
 from os.path import basename, join
 import re
 import numpy
+import argparse
 
 
-def submit_hist_data(cyc_data, threads, suite):
+def submit_hist_data(cyc_data, threads, suite, entryowner):
     for idx, val in enumerate(cyc_data):
         suite.properties['hist_data{}'.format(idx)] = "{},{},{},{}".format(
             val[0],                 # thread
             val[1],                 # latency
             val[2],                 # count
-            env.get("ENTRYOWNER")   # owner
+            entryowner              # owner
             )
     return suite
 
 
-def submit_thread_data(thread_data, threads, suite):
+def submit_thread_data(thread_data, threads, suite, entryowner):
     for i in range(threads):
         suite.properties['thread_data{}'.format(i)] = "{},{},{},{},{}".format(
             i,                      # thread
             thread_data[0][i],      # min
             thread_data[1][i],      # avg
             thread_data[2][i],      # max
-            env.get("ENTRYOWNER")   # owner
+            entryowner              # owner
             )
     return suite
 
@@ -136,9 +137,17 @@ def parse_dat_file(data):
 
     return minmax, breaks, threads, cyc_data, thread_data
 
+parser = argparse.ArgumentParser()
+parser.add_argument('cyclic_env')
+parser.add_argument('cyclic_dir')
+parser.add_argument('--entryowner', required=True)
+parser.add_argument('--duration', required=True)
+parser.add_argument('--interval', required=True)
+parser.add_argument('--limit', required=True)
+args = parser.parse_args()
 
-cyclic_env = sys.argv[1]
-cyclic_dir = sys.argv[2]
+cyclic_env = args.cyclic_env
+cyclic_dir = args.cyclic_dir
 descr = basename(cyclic_env)
 
 data = join(cyclic_dir, "histogram.dat")
@@ -165,19 +174,18 @@ with open(data, 'r') as fd:
     system_out = fd.read()
 ts.properties = {}
 ts.properties['description'] = descr
-ts.properties['duration'] = env.get("DURATION")
-ts.properties['interval'] = env.get("INTERVAL")
+ts.properties['duration'] = args.duration
+ts.properties['interval'] = args.interval
 ts.properties['min'] = minmax[0]
 ts.properties['avg'] = minmax[1]
 ts.properties['max'] = minmax[2]
 ts.properties['pass'] = breaks
-ts.properties['threshold'] = env.get("LIMIT")
+ts.properties['threshold'] = args.limit
 ts.properties['testscript'] = cyclic_cmd
-ts.properties['owner'] = env.get("ENTRYOWNER")
+ts.properties['owner'] = args.entryowner
 
-ts = submit_hist_data(cyc_data, threads, ts)
-ts = submit_thread_data(thread_data, threads, ts)
-
+ts = submit_hist_data(cyc_data, threads, ts, args.entryowner)
+ts = submit_thread_data(thread_data, threads, ts, args.entryowner)
 case.stdout = system_out
 case.stderr = system_err
 
