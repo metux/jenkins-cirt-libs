@@ -18,6 +18,7 @@ import sys
 from os import listdir
 import time
 from datetime import datetime
+import argparse
 
 
 Base = declarative_base()
@@ -454,43 +455,51 @@ db_user = env.get("DB_USER")
 db_pass = env.get("DB_PASS")
 db_name = "RT-Test"
 
-scheduler_id = env.get("BUILD_NUMBER")
-workspace = env.get("WORKSPACE")
-overlay = env.get("OVERLAY")
-config = env.get("CONFIG")
-arch = dirname(config)
-configname = basename(config)
-testbranch = env.get("GIT_BRANCH")
-commit = env.get("GIT_COMMIT")
-gitrepo = env.get("GITREPO")
-publicrepo = env.get("PUBLICREPO")
-httprepo = env.get("HTTPREPO")
-tags_commit = env.get("TAGS_COMMIT")
-tags_name = env.get("TAGS_NAME")
-branch = env.get("BRANCH")
+parser = argparse.ArgumentParser()
+parser.add_argument('path')
+parser.add_argument('--buildnumber', required=True)
+parser.add_argument('--workspace', required=True)
+parser.add_argument('--overlay', required=True)
+parser.add_argument('--config', required=True)
+parser.add_argument('--git_branch', required=True)
+parser.add_argument('--git_commit', required=True)
+parser.add_argument('--gitrepo', required=True)
+parser.add_argument('--publicrepo', required=True)
+parser.add_argument('--httprepo', required=True)
+parser.add_argument('--tags_commit', required=True)
+parser.add_argument('--tags_name', required=True)
+parser.add_argument('--branch', required=True)
+parser.add_argument('--entryowner', required=True)
+parser.add_argument('--first_run', required=True)
+parser.add_argument('--last_run', required=True)
+args = parser.parse_args()
+
+scheduler_id = args.buildnumber
+arch = dirname(args.config)
+configname = basename(args.config)
 
 all_tests_passed = False
 
-result_path = join(workspace, sys.argv[1])
-first_run = sys.argv[2]
-last_run = sys.argv[3]
+result_path = join(args.workspace, args.path)
+first_run = args.first_run
+last_run = args.last_run
 
-entry_owner = env.get("ENTRYOWNER")
+entry_owner = args.entryowner
 
 db = CirtDB(db_type, db_host, db_user, db_pass, db_name)
 
 if first_run == "first_run":
     git_id = db.submit_git(
-        gitrepo, publicrepo, httprepo, entry_owner
+        args.gitrepo, args.publicrepo, args.httprepo, entry_owner
         )
     tags_id = db.submit_tags(
-        tags_commit, tags_name, git_id
+        args.tags_commit, args.tags_name, git_id
         )
     scheduler_id = db.submit_cirtscheduler(
-        scheduler_id, tags_id, branch, entry_owner
+        scheduler_id, tags_id, args.branch, entry_owner
         )
     db.submit_cirtbranch(
-        testbranch, commit, scheduler_id, entry_owner
+        args.git_branch, args.git_commit, scheduler_id, entry_owner
         )
 
 junit_res = parse_junit(join(result_path, "compile", "pyjutest.xml"))
@@ -500,7 +509,7 @@ with open(join(result_path, "build", "defconfig"), 'r') as fd:
     defconfig = fd.read()
 compile_id = db.submit_compiletest(
     junit_res["result"], scheduler_id, entry_owner,
-    compile_script, defconfig, overlay, arch, configname,
+    compile_script, defconfig, args.overlay, arch, configname,
     junit_res["system_out"]
     )
 all_tests_passed = (junit_res["result"] == "pass")
