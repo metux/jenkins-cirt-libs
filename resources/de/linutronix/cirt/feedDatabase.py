@@ -10,6 +10,8 @@ from sqlalchemy import (Column, ForeignKey, PrimaryKeyConstraint)
 from sqlalchemy import (Integer, String, Boolean, Text,
                         LargeBinary, TIMESTAMP)
 from contextlib import contextmanager
+from junitparser import TestCase, TestSuite, JUnitXml, Skipped, \
+                        Error, Failure, Element, Attr
 from os import environ as env
 from os.path import basename, dirname, join
 import sys
@@ -36,6 +38,82 @@ def session_scope(session):
         raise DBError("database commit failed: " + str(e))
     finally:
         session.close()
+
+
+class HistData(Element):
+    _tag = 'histdata'
+    thread = Attr()
+    latency = Attr()
+    count = Attr()
+    owner = Attr()
+
+
+class ThreadData(Element):
+    _tag = 'threaddata'
+    thread = Attr()
+    tmin = Attr()
+    avg = Attr()
+    tmax = Attr()
+    owner = Attr()
+
+
+def parse_junit(filename):
+    xml = JUnitXml.fromfile(filename)
+    system_out = ""
+    system_err = ""
+    props = {}
+    hist_data = []
+    thread_data = []
+
+    for suite in xml:
+        for case in suite:
+            classname = case.classname
+            name = case.name
+            if (case.result is None):
+                result = "pass"
+            elif (type(case.result) is Failure):
+                result = "failure"
+            elif (type(case.result) is Error):
+                result = "error"
+            else:
+                result = "error"
+            if (case.system_out):
+                system_out = case.system_out
+            if (case.system_err):
+                system_err = case.system_err
+
+            if case.classname == "cyclictest":
+                # handle the cyclictest junit xml files with custom elements
+                # and properties
+                for p in suite.properties():
+                    props[p.name] = p.value
+
+                for hist_element in case.iterchildren(HistData):
+                    hist_data.append({
+                        "thread": hist_element.thread,
+                        "latency": hist_element.latency,
+                        "count": hist_element.count,
+                        "owner": hist_element.owner,
+                        })
+                for thread_element in case.iterchildren(ThreadData):
+                    thread_data.append({
+                        "thread": thread_element.thread,
+                        "min": thread_element.tmin,
+                        "avg": thread_element.avg,
+                        "max": thread_element.tmax,
+                        "owner": thread_element.owner
+                        })
+
+    return {
+        "classname": classname,
+        "name": name,
+        "result": result,
+        "system_out": system_out,
+        "system_err": system_err,
+        "props": props,
+        "hist_data": hist_data,
+        "thread_data": thread_data
+        }
 
 
 def get_current_time():
