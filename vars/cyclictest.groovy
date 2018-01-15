@@ -4,6 +4,7 @@
  */
 
 import de.linutronix.cirt.inputcheck;
+import de.linutronix.cirt.helper;
 
 def call(Map global, String target, String[] cyclictests) {
 	try {
@@ -19,6 +20,32 @@ def call(Map global, String target, String[] cyclictests) {
 					 * workspace directory doesn't has to be changed
 					 */
 					cyclictestRunner(global, target, ct);
+
+					unstash(global.STASH_PRODENV);
+					h = new helper();
+					String[] properties = ["environment.properties",
+						"boot/${target}.properties",
+						"${ct}.properties"];
+					h.add2environment(properties);
+					config = h.getEnv("CONFIG");
+					overlay = h.getEnv("OVERLAY");
+					kernel = "${config}/${overlay}";
+
+					cyclictestdir = "results/${kernel}/${target}/${ct}";
+					unstash(ct.replaceAll('/','_'));
+
+					script_content = libraryResource('de/linutronix/cirt/cyclictest/cyclictest2xml.py');
+					writeFile file:"collect", text:script_content;
+					sh("python3 collect ${ct} ${cyclictestdir}\
+						--entryowner ${h.getEnv('ENTRYOWNER')}\
+						--duration ${h.getEnv('DURATION')}\
+						--interval ${h.getEnv('INTERVAL')}\
+						--limit ${h.getEnv('LIMIT')}")
+
+					archiveArtifacts("${cyclictestdir}/pyjutest.xml");
+					stash(name: ct.replaceAll('/','_'),
+					      includes: "${cyclictestdir}/histogram.*," + \
+							"${cyclictestdir}/pyjutest.xml");
 				}
 			}
 		}
