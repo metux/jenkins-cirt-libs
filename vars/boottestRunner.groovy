@@ -34,6 +34,7 @@ echo $! >'''+""" ${pidfile}"""
 	}
 
 	/* Set taget offline */
+	/* TODO: test, if it is a reboot into default kernel; Do not fail if target is offline! */
 	libvirt.offline(target, off_message);
 
 	/*
