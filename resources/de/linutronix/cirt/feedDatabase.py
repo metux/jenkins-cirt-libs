@@ -171,6 +171,28 @@ class Compiletest (Base):
     buildcmd = Column(LargeBinary)
     owner = Column(Text)
     buildlog = Column(LargeBinary)
+
+
+class Target (Base):
+    __tablename__ = 'target'
+    target_id = Column('id', Integer, primary_key=True)
+    hostname = Column(String(80))
+    shortdesc = Column(String(80))
+    description = Column(LargeBinary)
+    label_id = Column(Integer)
+    owner = Column(Text)
+
+
+class Boottest (Base):
+    __tablename__ = 'boottest'
+    boottest_id = Column('id', Integer, primary_key=True)
+    cmdline = Column(String(1024))
+    pass_ = Column('pass', Boolean)
+    compiletest_id = Column(Integer, ForeignKey('compiletest.id'))
+    target_id = Column(Integer, ForeignKey('target.id'))
+    bootdate = Column(TIMESTAMP)
+    owner = Column(Text)
+    bootlog = Column(LargeBinary)
 class CirtDB():
     def __init__(self, db_type, db_host, db_user, db_pass, db_name):
         db_string = "%s://%s:%s@%s/%s" % (db_type, db_user,
@@ -275,6 +297,27 @@ class CirtDB():
             s.commit()
             return new_compiletest.compiletest_id
 
+    def submit_boottest(self, boot_result,
+                        compile_id, target_name, entry_owner, system_out,
+                        cmdline):
+        with session_scope(self.session) as s:
+            target_id = s.query(Target).\
+                filter(Target.hostname == target_name).one().target_id
+
+        new_boottest = Boottest(
+            cmdline=cmdline,
+            target_id=target_id,
+            compiletest_id=compile_id,
+            bootdate=get_current_time(),
+            pass_=(boot_result == "pass"),
+            owner=entry_owner,
+            bootlog=system_out.encode("utf-8")
+            )
+        with session_scope(self.session) as s:
+            s.add(new_boottest)
+            s.commit()
+            return new_boottest.boottest_id
+
     def update_cirtscheduler(self, scheduler_id,
                              passed, first_run, last_run):
         with session_scope(self.session) as s:
@@ -344,6 +387,24 @@ compile_id = db.submit_compiletest(
     junit_res["system_out"]
     )
 all_tests_passed = (junit_res["result"] == "pass")
+# iterate over all junit xml files for the different
+# configurations of boot- and cyclictests
+boottests = listdir(result_path)
+for boottest in boottests:
+    if boottest != "compile" and boottest != "build":
+        junit_res = parse_junit(
+            join(result_path, boottest, "boottest", "pyjutest.xml")
+                )
+        with open(join(result_path, boottest,
+                  "cmdline"), 'r') as fd:
+            cmdline = fd.read()
+        boot_id = db.submit_boottest(
+            junit_res["result"],
+            compile_id, boottest, entry_owner, junit_res["system_out"],
+            cmdline
+            )
+        all_tests_passed = all_tests_passed and \
+            (junit_res["result"] == "pass")
 db.update_cirtscheduler(
     scheduler_id,
     all_tests_passed,
