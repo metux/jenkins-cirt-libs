@@ -158,6 +158,19 @@ class Cirtbranch (Base):
     owner = Column(Text)
 
 
+class Compiletest (Base):
+    __tablename__ = 'compiletest'
+    compiletest_id = Column('id', Integer, primary_key=True)
+    custom_commit = Column(String(40))
+    defconfig = Column(LargeBinary)
+    overlay = Column(String(45))
+    pass_ = Column('pass', Boolean)
+    cirtscheduler_id = Column(Integer, ForeignKey('cirtscheduler.id'))
+    configname = Column(String(80))
+    arch = Column(String(40))
+    buildcmd = Column(LargeBinary)
+    owner = Column(Text)
+    buildlog = Column(LargeBinary)
 class CirtDB():
     def __init__(self, db_type, db_host, db_user, db_pass, db_name):
         db_string = "%s://%s:%s@%s/%s" % (db_type, db_user,
@@ -242,6 +255,37 @@ class CirtDB():
             s.commit()
             return new_cirtbranch.cirtbranch_id
 
+    def submit_compiletest(self, compile_result,
+                           scheduler_id, entry_owner, compile_script,
+                           defconfig, overlay, arch, configname, system_out):
+        new_compiletest = Compiletest(
+            overlay=overlay,
+            custom_commit="not set",
+            defconfig=defconfig.encode("UTF-8"),
+            cirtscheduler_id=scheduler_id,
+            configname=configname,
+            arch=arch,
+            buildcmd=compile_script.encode("UTF-8"),
+            pass_=(compile_result == "pass"),
+            owner=entry_owner,
+            buildlog=system_out.encode("UTF-8")
+            )
+        with session_scope(self.session) as s:
+            s.add(new_compiletest)
+            s.commit()
+            return new_compiletest.compiletest_id
+
+    def update_cirtscheduler(self, scheduler_id,
+                             passed, first_run, last_run):
+        with session_scope(self.session) as s:
+            cirtscheduler = s.query(Cirtscheduler).\
+                filter(Cirtscheduler.cirtscheduler_id == scheduler_id).one()
+            if not first_run == "first_run":
+                prev_pass = cirtscheduler["pass"]
+                passed = passed and prev_pass
+
+            cirtscheduler.pass_ = passed
+            cirtscheduler.processing = last_run != "last_run"
 
 # collect information from env and command line params
 db_type = "postgresql"
@@ -252,6 +296,10 @@ db_name = "RT-Test"
 
 scheduler_id = env.get("BUILD_NUMBER")
 workspace = env.get("WORKSPACE")
+overlay = env.get("OVERLAY")
+config = env.get("CONFIG")
+arch = dirname(config)
+configname = basename(config)
 testbranch = env.get("GIT_BRANCH")
 commit = env.get("GIT_COMMIT")
 gitrepo = env.get("GITREPO")
@@ -260,6 +308,8 @@ httprepo = env.get("HTTPREPO")
 tags_commit = env.get("TAGS_COMMIT")
 tags_name = env.get("TAGS_NAME")
 branch = env.get("BRANCH")
+
+all_tests_passed = False
 
 result_path = join(workspace, sys.argv[1])
 first_run = sys.argv[2]
@@ -282,5 +332,23 @@ if first_run == "first_run":
     db.submit_cirtbranch(
         testbranch, commit, scheduler_id, entry_owner
         )
+
+junit_res = parse_junit(join(result_path, "compile", "pyjutest.xml"))
+with open(join(result_path, "compile", "compile-script.sh"), 'r') as fd:
+    compile_script = fd.read()
+with open(join(result_path, "build", "defconfig"), 'r') as fd:
+    defconfig = fd.read()
+compile_id = db.submit_compiletest(
+    junit_res["result"], scheduler_id, entry_owner,
+    compile_script, defconfig, overlay, arch, configname,
+    junit_res["system_out"]
+    )
+all_tests_passed = (junit_res["result"] == "pass")
+db.update_cirtscheduler(
+    scheduler_id,
+    all_tests_passed,
+    first_run,
+    last_run
+    )
 
 db.close()
