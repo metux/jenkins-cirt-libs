@@ -128,10 +128,10 @@ fi
 		       "bash ${resultdir}/compile-script.sh");
 		sh("mv pyjutest.xml ${resultdir}/");
 		stash(name: linuximage,
-		      includes: 'compile/linux-image*deb',
+		      includes: "${resultdir}/linux-image*deb, ${resultdir}/dtbs-${env.BUILD_NUMBER}.tar.xz",
 		      allowEmpty: true);
 	}
-	archiveArtifacts(artifacts: "${compiledir}/compile/**",
+	archiveArtifacts(artifacts: "${compiledir}/${resultdir}/**",
 			 fingerprint: true);
 
 }
