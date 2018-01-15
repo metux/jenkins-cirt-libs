@@ -42,7 +42,7 @@ private runner(Map global, String repo, String branch,
 		/* Extract gittag information for db entry */
 		dir(resultdir) {
 			sh """echo "TAGS_COMMIT=\$(git rev-parse HEAD)" >> gittags.properties""";
-			sh """echo "TAGS_COMMIT=\$(git describe HEAD)" >> gittags.properties""";
+			sh """echo "TAGS_NAME=\$(git describe HEAD)" >> gittags.properties""";
 		}
 
 		/* Create builddir and create empty .config */
