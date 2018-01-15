@@ -133,7 +133,12 @@ fi
 	}
 	archiveArtifacts(artifacts: "${compiledir}/${resultdir}/**",
 			 fingerprint: true);
-
+	stash(name: compiledir.replaceAll('/','_'),
+	      includes: "${compiledir}/${resultdir}/pyjutest.xml, " +
+			"${compiledir}/${resultdir}/compile-script.sh, " +
+			"${compiledir}/${resultdir}/gittags.properties, " +
+			"${compiledir}/${builddir}/defconfig",
+	      allowEmpty: true);
 }
 
 def call(Map global, String repo, String branch,
