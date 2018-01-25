@@ -324,7 +324,7 @@ class CirtDB():
                              tags_id, branch, entry_owner):
         new_cirtscheduler = Cirtscheduler(
             cirtscheduler_id=scheduler_id,
-            branch=branch.encode("UTF-8"),
+            branch=branch,
             timestamp=get_current_time(),
             pass_=False,
             tags_id=tags_id,
