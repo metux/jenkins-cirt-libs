@@ -43,7 +43,17 @@ private compileJob(Map global, String config, String overlay,
 					 * another node, workspace
 					 * doesn't has to be changed.
 					 */
-					boottest(global, boottests);
+
+					/*
+					 * currentBuild.result == null:
+					 * in progress, no failure
+					 */
+					if (currentBuild.result == null ||
+					    currentBuild.result == 'STABLE') {
+						boottest(global, boottests);
+					} else {
+						println("Boottest skipped due to previous failure");
+					}
 				}
 			}
 		}
