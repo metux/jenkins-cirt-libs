@@ -132,14 +132,22 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 			seriallog = "${resultdir}/serialboot.log";
 			bootlog = "${resultdir}/boot.log";
 
+			/*
+			 * Create result directory and add cmdlinefile
+			 * and bootlog file with default content. This
+			 * prevents that a test system exception
+			 * (caused by a test system error) is
+			 * overwritten by a missing file exception in
+			 * the finally section.
+			 */
+			dir(resultdir) {
+				writeFile file:"${cmdlinefile}" - "${resultdir}/", text:'none';
+				writeFile file:"${bootlog}" - "${resultdir}/", text:'--- no boot log available ---';
+			}
+
 			libvirt.wait4onlineTimeout(target, 120);
 
 			targetprep(global, target, kernel);
-
-			/* Create result directory */
-			dir(resultdir) {
-				writeFile file:"serialboot-default.log", text:'';
-			}
 
 			try {
 				rebootTarget(hypervisor, target, seriallog, true);
