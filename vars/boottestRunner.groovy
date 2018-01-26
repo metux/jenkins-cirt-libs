@@ -19,18 +19,30 @@ private rebootTarget(String hypervisor, String target, String seriallog, Boolean
 		off_message = "Reboot to default Kernel";
 	}
 
-	/* Start serial console logging */
-	/* TODO: Cleanup error handling; it is not the best solution */
-	writeFile file: virshoutput, text: '';
-	sh """virsh -c ${hypervisor} consolelog ${target} --force --logfile ${seriallog} 2> ${virshoutput} || echo \"virsh error!\" >> ${virshoutput}"""+'''&
+	/*
+	 * TODO: Ignore serial boot log on default boot for now.
+	 * QEMU drops the connection to the serial console on destroy.
+	 * virsh console stopps therefore. Later on the test trys to
+	 * kill a non-existing process which results in a test abort.
+	 */
+
+	if (testboot) {
+		/* Start serial console logging on test boot */
+		/* TODO: Cleanup error handling; it is not the best solution */
+		writeFile file: virshoutput, text: '';
+		sh """virsh -c ${hypervisor} consolelog ${target} --force --logfile ${seriallog} 2> ${virshoutput} || echo \"virsh error!\" >> ${virshoutput}"""+'''&
 echo $! >'''+""" ${pidfile}"""
 
-	/* Wait 5 seconds to be sure that virsh workes properly and error file was written*/
-	sleep(time: 5, unit: 'SECONDS');
-	output = readFile(virshoutput).trim()
-	if (output) {
-		println("Virsh console logging Problem (target properly written and logfile writeable?): "+output);
-		/* TODO: throw exception; IT Problem */
+		/*
+		 * Wait 5 seconds to be sure that virsh workes properly and
+		 * error file was written.
+		 */
+		sleep(time: 5, unit: 'SECONDS');
+		output = readFile(virshoutput).trim()
+		if (output) {
+			println("Virsh console logging Problem (target properly written and logfile writeable?): " + output);
+			/* TODO: throw exception; IT Problem */
+		}
 	}
 
 	/*
@@ -60,9 +72,15 @@ echo $! >'''+""" ${pidfile}"""
 	 */
 	sleep(time: 330, unit: 'SECONDS');
 
-	println("kill seriallog");
-	def pid = readFile(pidfile).trim();
-	sh "kill ${pid}";
+	/*
+	 * TODO: Ignore serial boot log on default boot for now.
+	 * See above.
+	 */
+	if (testboot) {
+		println("kill seriallog");
+		def pid = readFile(pidfile).trim();
+		sh "kill ${pid}";
+	}
 }
 
 private writeBootlog(String seriallog, String bootlog) {
