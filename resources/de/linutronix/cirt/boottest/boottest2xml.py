@@ -10,8 +10,11 @@ try:
     failure = sys.argv[3]
 except:
     failure = False
-bootlog = join(boottest_dir, "boottest", "boot.log")
-cmdline_file = join(boottest_dir, "cmdline")
+
+result_dir = join(boottest_dir, "boottest")
+
+bootlog = join(result_dir, "boot.log")
+cmdline_file = join(result_dir, "cmdline")
 
 case = TestCase(boottest)
 case.classname = "boottest"
@@ -31,5 +34,5 @@ case.stdout = system_out
 
 ts.test_cases.append(case)
 
-with open(join(boottest_dir, 'boottest', 'pyjutest.xml'), 'w') as f:
+with open(join(result_dir, 'pyjutest.xml'), 'w') as f:
     TestSuite.to_file(f, [ts], prettyprint=True)

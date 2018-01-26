@@ -521,7 +521,7 @@ for boottest in boottests:
         junit_res = parse_junit(
             join(result_path, boottest, "boottest", "pyjutest.xml")
                 )
-        with open(join(result_path, boottest,
+        with open(join(result_path, boottest, "boottest",
                   "cmdline"), 'r') as fd:
             cmdline = fd.read()
         boot_id = db.submit_boottest(

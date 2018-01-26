@@ -116,9 +116,6 @@ private checkOnline(String target, Boolean testboot) {
 	/* TODO add a check for the default Kernel */
 
 	println("Target is back");
-	if (testboot) {
-		sh "echo \$(ssh ${target} cat /proc/cmdline) > cmdline";
-	}
 }
 
 private runner(Map global, helper helper, String boottest, String boottestdir, String resultdir) {
@@ -130,6 +127,7 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 	dir(boottestdir) {
 		deleteDir();
 		lock(target) {
+			cmdlinefile = "${resultdir}/cmdline";
 			seriallog_default = "${resultdir}/serialboot-default.log"
 			seriallog = "${resultdir}/serialboot.log";
 			bootlog = "${resultdir}/boot.log";
@@ -149,6 +147,9 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 				writeBootlog(seriallog, bootlog);
 
 				checkOnline(target, true);
+
+				/* write cmdline to file */
+				sh "echo \$(ssh ${target} cat /proc/cmdline) > ${cmdlinefile}";
 
 				cyclictests = helper.getEnv("CYCLICTESTS").split();
 				if (cyclictests) {
@@ -216,8 +217,8 @@ def call(Map global, String boottest) {
 				sh("python3 boottest2xml ${boottest} ${boottestdir}")
 			}
 			stash(name: boottest.replaceAll('/','_'),
-				  includes: "${boottestdir}/${resultdir}/pyjutest.xml, " +
-							"${boottestdir}/cmdline");
+			      includes: "${boottestdir}/${resultdir}/pyjutest.xml, " +
+					"${boottestdir}/${resultdir}/cmdline");
 		}
 	}
 }
