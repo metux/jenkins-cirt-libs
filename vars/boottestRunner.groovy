@@ -259,6 +259,7 @@ def call(Map global, String boottest) {
 			} else {
 				sh("python3 boottest2xml ${boottest} ${boottestdir}")
 			}
+			junit("${resultdir}/pyjutest.xml");
 			stash(name: boottest.replaceAll('/','_'),
 			      includes: "${resultdir}/pyjutest.xml, " +
 					"${resultdir}/cmdline");
