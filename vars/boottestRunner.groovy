@@ -33,9 +33,11 @@ echo $! >'''+""" ${pidfile}"""
 		/* TODO: throw exception; IT Problem */
 	}
 
-	/* Set taget offline */
-	/* TODO: test, if it is a reboot into default kernel; Do not fail if target is offline! */
-	libvirt.offline(target, off_message);
+	/*
+	 * Set taget offline.
+	 * Fail on an offline node on a test boot, warn otherwise.
+	 */
+	libvirt.offline(target, off_message, testboot);
 
 	/*
 	 * Brave New World: systemd kills the network before ssh
@@ -97,7 +99,7 @@ private checkOnline(String target, Boolean testboot) {
 		sh "ssh -o ConnectTimeout=10 -o ConnectionAttempts=6 ${target} uname -r";
 
 		/* Set target online */
-		libvirt.online(target, on_message);
+		libvirt.online(target, on_message, testboot);
 	} catch (AbortException ex) {
 		println("Target ${target} is not online after 310 seconds");
 

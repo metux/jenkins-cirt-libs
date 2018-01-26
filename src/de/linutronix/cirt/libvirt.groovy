@@ -60,14 +60,18 @@ static wait4onlineTimeout(String target, Integer timeout) {
 	}
 }
 
-static offline(String target, String reason) {
+static offline(String target, String reason, Boolean fail = true) {
 	def jenkins = Jenkins.instance
 
 	for (slave in jenkins.slaves) {
 		def computer = slave.computer
 		if (computer.name == target) {
 			if (computer.isOffline()) {
-				throw new hudson.AbortException("Target ${computer.name} is offline. Abort.")
+				if (fail) {
+					    throw new hudson.AbortException("Target ${computer.name} is offline. Abort.");
+				} else {
+					println("Target ${computer.name} is already offline.");
+				}
 			}
 			println("Offline ${computer.name}: ${reason}");
 			computer.doToggleOffline("${reason}")
@@ -75,14 +79,18 @@ static offline(String target, String reason) {
 	}
 }
 
-static online(String target, String reason) {
+static online(String target, String reason, Boolean fail = true) {
 	def jenkins = Jenkins.instance
 
 	for (slave in jenkins.slaves) {
 		def computer = slave.computer
 		if (computer.name == target) {
 			if (computer.isOnline()) {
-				throw new hudson.AbortException("Target ${computer.name} is online. Abort.")
+				if (fail) {
+					throw new hudson.AbortException("Target ${computer.name} is online. Abort.");
+				} else {
+					println("Target ${computer.name} is already online.");
+				}
 			}
 			println("Online ${computer.name}: ${reason}");
 			computer.doToggleOffline("${reason}")
