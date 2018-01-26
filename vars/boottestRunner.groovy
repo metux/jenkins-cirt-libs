@@ -9,6 +9,12 @@ import de.linutronix.cirt.libvirt;
 
 import hudson.AbortException
 
+class BoottestException extends RuntimeException {
+        BoottestException (String message) {
+                super(message);
+        }
+}
+
 private rebootTarget(String hypervisor, String target, String seriallog, Boolean testboot) {
 	def pidfile = "seriallogpid";
 	def virshoutput = "virshoutput";
@@ -121,7 +127,12 @@ private checkOnline(String target, Boolean testboot) {
 	} catch (AbortException ex) {
 		println("Target ${target} is not online after 310 seconds");
 
-		error message:"Target ${target} is not online after 310 seconds";
+		def msg = "Target ${target} is not online after 310 seconds";
+		if (testboot) {
+			throw new BoottestException(msg);
+		} else {
+			error(msg);
+		}
 	}
 
 	/* Test for the proper kernel version */
@@ -183,6 +194,9 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 				if (cyclictests) {
 					cyclictest(global, target, cyclictests);
 				}
+			} catch (BoottestException ex) {
+				println("Booting into Kernel under test failed. Mark build as unstable.");
+				currentBuild.result = 'UNSTABLE';
 			} catch (Exception ex) {
 				println("boottest \"${boottest}\" failed:");
 				println(ex.toString());
