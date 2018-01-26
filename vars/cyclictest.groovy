@@ -42,6 +42,7 @@ def call(Map global, String target, String[] cyclictests) {
 						--interval ${h.getEnv('INTERVAL')}\
 						--limit ${h.getEnv('LIMIT')}")
 
+					junit("${cyclictestdir}/pyjutest.xml");
 					archiveArtifacts("${cyclictestdir}/pyjutest.xml");
 					stash(name: ct.replaceAll('/','_'),
 					      includes: "${cyclictestdir}/histogram.*," + \
