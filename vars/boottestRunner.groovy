@@ -207,7 +207,8 @@ def call(Map global, String boottest) {
 		error("boottest \"${boottest}\" failed.");
 	} finally {
 		dir("boottestRunner") {
-			archiveArtifacts(artifacts: "${boottestdir}/${resultdir}/**",
+			resultdir = "${boottestdir}/" + resultdir;
+			archiveArtifacts(artifacts: "${resultdir}/**",
 					 fingerprint: true);
 			script_content = libraryResource('de/linutronix/cirt/boottest/boottest2xml.py');
 			writeFile file:"boottest2xml", text:script_content;
@@ -217,8 +218,8 @@ def call(Map global, String boottest) {
 				sh("python3 boottest2xml ${boottest} ${boottestdir}")
 			}
 			stash(name: boottest.replaceAll('/','_'),
-			      includes: "${boottestdir}/${resultdir}/pyjutest.xml, " +
-					"${boottestdir}/${resultdir}/cmdline");
+			      includes: "${resultdir}/pyjutest.xml, " +
+					"${resultdir}/cmdline");
 		}
 	}
 }
