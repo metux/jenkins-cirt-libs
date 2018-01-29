@@ -390,8 +390,8 @@ class CirtDB():
             s.commit()
             return new_boottest.boottest_id
 
-    def submit_cyclictest(self, cyclic_result,
-                          boot_id, entry_owner, props, system_out):
+    def submit_cyclictest(self, cyclic_result, boot_id,
+                          entry_owner, props, system_out, cyclic_script):
         new_cyclictest = Cyclictest(
             description=props["description"],
             duration=props["duration"],
@@ -401,7 +401,10 @@ class CirtDB():
             max_=props["max"],
             boottest_id=boot_id,
             threshold=props["threshold"],
-            testscript=props["testscript"].encode("utf-8"),
+            # TODO: Fix proper line break usage in xml to use
+            # xml property instead of the file
+            # testscript=props["testscript"].encode("utf-8"),
+            testscript=cyclic_script.encode("utf-8"),
             pass_=(cyclic_result == "pass"),
             owner=entry_owner,
             testlog=system_out.encode("utf-8")
@@ -538,11 +541,14 @@ for boottest in boottests:
             cyclic_path = join(result_path, boottest, "cyclictest",
                                boottest, cyclic)
             junit_res = parse_junit(join(cyclic_path, "pyjutest.xml"))
+            with open(join(cyclic_path, "histogram.sh"), 'r') as fd:
+                cyclic_script = fd.read()
             cyclic_id = db.submit_cyclictest(
                 junit_res["result"],
                 boot_id, entry_owner,
                 junit_res["props"],
-                junit_res["system_out"]
+                junit_res["system_out"],
+                cyclic_script
                 )
             all_tests_passed = all_tests_passed and \
                 (junit_res["result"] == "pass")
