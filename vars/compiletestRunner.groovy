@@ -67,7 +67,7 @@ private runner(Map global, String repo, String branch,
 		exports = exports.replaceAll(/(?m)^\s*\n/, "");
 		exports = exports.replaceAll(/(?m)^/, "export ");
 
-		def script_content = """#!/bin/bash
+		def script_content = """#!/bin/bash -x
 
 # Abort build script if there was an error executing the commands
 set -e
