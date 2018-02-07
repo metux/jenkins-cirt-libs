@@ -19,6 +19,8 @@ private runner(Map global, String repo, String branch,
 	def linuximage = "${config}/${overlay}".replaceAll('/','_');
 	arch = config.split("/")[0];
 
+	def result = '';
+
 	dir(compiledir) {
 		deleteDir();
 
@@ -124,8 +126,8 @@ fi
 ''';
 
 		writeFile file:"${resultdir}/compile-script.sh", text:script_content;
-		shunit("compile", "${config}/${overlay}",
-		       "bash ${resultdir}/compile-script.sh");
+		result = shunit("compile", "${config}/${overlay}",
+				"bash ${resultdir}/compile-script.sh");
 		sh("mv pyjutest.xml ${resultdir}/");
 		stash(name: linuximage,
 		      includes: "${resultdir}/linux-image*deb, ${resultdir}/dtbs-${env.BUILD_NUMBER}.tar.xz",
@@ -142,6 +144,7 @@ fi
 			"${compiledir}/${resultdir}/compile.log, " +
 			"${compiledir}/${builddir}/defconfig",
 	      allowEmpty: true);
+	return result;
 }
 
 private failnotify(Map global, String repo, String branch, String config,
@@ -172,10 +175,11 @@ def call(Map global, String repo, String branch,
 	 String config, String overlay, String recipients) {
 	try {
 		inputcheck.check(global);
+		def result = '';
 		node ('kernel') {
 			dir("compiletestRunner") {
 				deleteDir()
-				runner(global, repo, branch, config, overlay);
+				result = runner(global, repo, branch, config, overlay);
 
 				/* Parse compile.log and package.log for warnings */
 				def compiledir = "results/${config}/${overlay}";
@@ -200,10 +204,11 @@ def call(Map global, String repo, String branch,
 			}
 		}
 
-		if (currentBuild.result == 'UNSTABLE') {
+		if (result == 'UNSTABLE') {
 			failnotify(global, repo, branch, config,
 				   overlay, recipients);
 		}
+		return result;
 	} catch(Exception ex) {
                 println("compiletest runner failed:");
                 println(ex.toString());

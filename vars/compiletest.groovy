@@ -26,15 +26,16 @@ private compileJob(Map global, String config, String overlay,
 		}
 
 		return {
+			def compileresult = ''
 			stage ("compile ${repo} ${branch} ${config} ${overlay}") {
 				/*
 				 * Subprocesses needs to be started in
 				 * WORKSPACE!
 				 */
 				dir("../") {
-					compiletestRunner(global, repo, branch,
-							  config, overlay,
-							  recipients);
+					compileresult = compiletestRunner(global, repo, branch,
+									  config, overlay,
+									  recipients);
 				}
 			}
 			stage ("Boottests ${config} ${overlay}") {
@@ -44,17 +45,11 @@ private compileJob(Map global, String config, String overlay,
 					 * another node, workspace
 					 * doesn't has to be changed.
 					 */
-
-					/*
-					 * currentBuild.result == null:
-					 * in progress, no failure
-					 */
-					if (currentBuild.result == null ||
-					    currentBuild.result == 'STABLE') {
+					if (compileresult == 'SUCCESS') {
 						boottest(global, boottests,
 							 recipients);
 					} else {
-						println("Boottest skipped due to previous failure");
+						println ("Boottest skipped due to previous failure");
 					}
 				}
 			}
