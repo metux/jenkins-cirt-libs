@@ -323,7 +323,7 @@ def call(Map global, String boottest, String recipients) {
 		      "${resultdir}/cmdline");
 
 		/* Do not notify on failed cyclictest nor stable test */
-		if (cyclictestFailed || currentBuild.result != 'UNSTABLE') {
+		if (cyclictestFailed || !failed) {
 			return;
 		}
 
