@@ -30,15 +30,15 @@ def call(String classname, String name, String cmd) {
 	logger.debugMsg("run: " + testcmd);
 	sh(testcmd);
 	logger.debugMsg("--- End Test ---");
-	junit("pyjutest.xml");
+	return junit_result("pyjutest.xml");
 }
 
 def call(String classname, String cmd) {
-	call(classname, null, cmd);
+	return call(classname, null, cmd);
 }
 
 def call(String cmd) {
-	call(null, null, cmd);
+	return call(null, null, cmd);
 }
 
 def call(String... params) {
