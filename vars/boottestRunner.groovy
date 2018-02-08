@@ -198,10 +198,10 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 
 				cyclictests = helper.getEnv("CYCLICTESTS").split();
 				if (cyclictests) {
-					cyclictest(global, target, cyclictests,
-						   recipients);
+					def cyclicresult = cyclictest(global, target, cyclictests,
+								      recipients);
 
-					if (currentBuild.result == 'UNSTABLE') {
+					if (cyclicresult == 'UNSTABLE') {
 						throw new CyclictestException("One or more cyclictests failed.");
 					}
 				}

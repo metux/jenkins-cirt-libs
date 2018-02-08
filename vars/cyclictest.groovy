@@ -70,13 +70,13 @@ private parse_results(Map global, String target, String ct, String recipients)
 	    --interval ${h.getEnv('INTERVAL')}				\
 	    --limit ${h.getEnv('LIMIT')}")
 
-	junit("${cyclictestdir}/pyjutest.xml");
+	def result = junit_result("${cyclictestdir}/pyjutest.xml");
 	archiveArtifacts("${cyclictestdir}/pyjutest.xml");
 	stash(name: ct.replaceAll('/','_'),
 	      includes: "${cyclictestdir}/histogram.*," +
 			"${cyclictestdir}/pyjutest.xml");
 
-	if (currentBuild.result == 'UNSTABLE') {
+	if (result == 'UNSTABLE') {
 		failnotify(global, h, target, cyclictestdir, recipients);
 	}
 }
@@ -84,6 +84,7 @@ private parse_results(Map global, String target, String ct, String recipients)
 def call(Map global, String target, String[] cyclictests, String recipients) {
 	try {
                 inputcheck.check(global);
+		def results = [];
 		node('master') {
 			dir ("cyclictest") {
 				deleteDir();
@@ -95,10 +96,15 @@ def call(Map global, String target, String[] cyclictests, String recipients) {
 					 * workspace directory doesn't has to be changed
 					 */
 					cyclictestRunner(global, target, ct);
-					parse_results(global, target, ct,
-						      recipients);
+					results << parse_results(global, target, ct,
+								 recipients);
 				}
 			}
+		}
+		if (results.contains('UNSTABLE')) {
+			return 'UNSTABLE';
+		} else {
+			return 'SUCCESS';
 		}
 	} catch(Exception ex) {
                 println("cyclictest on ${target} failed:");
