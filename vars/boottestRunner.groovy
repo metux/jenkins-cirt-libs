@@ -15,6 +15,12 @@ class BoottestException extends RuntimeException {
         }
 }
 
+class CyclictestException extends RuntimeException {
+	CyclictestException (String message) {
+		super(message);
+	}
+}
+
 private rebootTarget(String hypervisor, String target, String seriallog, Boolean testboot) {
 	def pidfile = "seriallogpid";
 	def virshoutput = "virshoutput";
@@ -194,6 +200,10 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 				if (cyclictests) {
 					cyclictest(global, target, cyclictests,
 						   recipients);
+
+					if (currentBuild.result == 'UNSTABLE') {
+						throw new CyclictestException("One or more cyclictests failed.");
+					}
 				}
 			} finally {
 				println("Reboot into default kernel");
@@ -237,6 +247,7 @@ private failnotify(Map global, String repo, String branch, String config,
 
 def call(Map global, String boottest, String recipients) {
 	def failed = false;
+	def cyclictestFailed = false;
 	h = new helper();
 	try {
 		inputcheck.check(global);
@@ -269,6 +280,8 @@ def call(Map global, String boottest, String recipients) {
 		}
 	} catch (BoottestException ex) {
 		failed = true;
+	} catch (CyclictestException ex) {
+		cyclictestFailed = true;
 	} catch(Exception ex) {
 		println("boottest \"${boottest}\" failed:");
 		println(ex.toString());
@@ -309,9 +322,13 @@ def call(Map global, String boottest, String recipients) {
 		      includes: "${resultdir}/pyjutest.xml, " +
 		      "${resultdir}/cmdline");
 
-		if (currentBuild.result == 'UNSTABLE') {
-			failnotify(global, repo, branch, config, overlay,
-				   resultdir, recipients);
+		/* Do not notify on failed cyclictest nor stable test */
+		if (cyclictestFailed || currentBuild.result != 'UNSTABLE') {
+			return;
+		}
+
+		failnotify(global, repo, branch, config, overlay, resultdir,
+			   recipients);
 	}
 }
 
