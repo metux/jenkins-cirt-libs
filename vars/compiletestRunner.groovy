@@ -149,6 +149,27 @@ def call(Map global, String repo, String branch,
 			dir("compiletestRunner") {
 				deleteDir()
 				runner(global, repo, branch, config, overlay);
+
+				/* Parse compile.log and package.log for warnings */
+				def compiledir = "results/${config}/${overlay}";
+				warnings(canComputeNew: false,
+					 canResolveRelativePaths: false,
+					 canRunOnFailed: true,
+					 categoriesPattern: '',
+					 defaultEncoding: '',
+					 excludePattern: '',
+					 healthy: '',
+					 includePattern: '',
+					 messagesPattern: '',
+					 parserConfigurations: [[parserName: 'GNU Make + GNU C Compiler (gcc)',
+								 pattern: "${compiledir}/**/compile.log"],
+								[parserName: 'Linux Kernel Makefile Errors',
+								 pattern: "${compiledir}/**/compile.log"],
+								[parserName: 'GNU Make + GNU C Compiler (gcc)',
+								 pattern: "${compiledir}/**/package.log"],
+								[parserName: 'Linux Kernel Makefile Errors',
+								 pattern: "${compiledir}/**/package.log"]],
+					 unHealthy: '');
 			}
 		}
 	} catch(Exception ex) {
