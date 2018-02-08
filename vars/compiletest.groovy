@@ -51,7 +51,8 @@ private compileJob(Map global, String config, String overlay,
 					 */
 					if (currentBuild.result == null ||
 					    currentBuild.result == 'STABLE') {
-						boottest(global, boottests);
+						boottest(global, boottests,
+							 recipients);
 					} else {
 						println("Boottest skipped due to previous failure");
 					}

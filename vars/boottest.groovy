@@ -5,16 +5,16 @@
 
 import de.linutronix.cirt.inputcheck;
 
-private boottestJob(Map global, String boottest) {
+private boottestJob(Map global, String boottest, String recipients) {
 	//return {
 		println("Running boottest ${boottest}");
 		dir ("../") {
-			boottestRunner(global, boottest);
+			boottestRunner(global, boottest, recipients);
 		}
 	//}
 }
 
-private runboottest(Map global, String[] boottests) {
+private runboottest(Map global, String[] boottests, String recipients) {
 	def stepsForParallel = [:];
 
 	for (int i = 0; i < boottests.size(); i++) {
@@ -22,21 +22,22 @@ private runboottest(Map global, String[] boottests) {
 
 		//def jobName = "Boottest ${boottest}";
 		//stepsForParallel[jobName] =
-		boottestJob(global, "${boottest}");
+		boottestJob(global, "${boottest}", recipients);
 	};
 
 	//parallel(stepsForParallel);
 }
 
-def call(Map global, String[] boottests) {
+def call(Map global, String[] boottests, String recipients) {
 	try {
 		inputcheck.check(global);
 		node('master') {
 			dir("boottest") {
 				deleteDir();
-				if (boottests == null)
+				if (boottests == null) {
 					return;
-				runboottest(global, boottests);
+				}
+				runboottest(global, boottests, recipients);
 			}
 		}
 	} catch(Exception ex) {

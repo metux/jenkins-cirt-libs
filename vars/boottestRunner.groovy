@@ -149,7 +149,7 @@ private checkOnline(String target, Boolean testboot) {
 	println("Target is back");
 }
 
-private runner(Map global, helper helper, String boottest, String boottestdir, String resultdir) {
+private runner(Map global, helper helper, String boottest, String boottestdir, String resultdir, String recipients) {
 	target = helper.getEnv("TARGET");
 
 	hypervisor = libvirt.getURI(target);
@@ -203,7 +203,38 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 	}
 }
 
-def call(Map global, String boottest) {
+private failnotify(Map global, String repo, String branch, String config,
+		   String overlay, String resultdir, String recipients)
+{
+	def results = "results/${config}/${overlay}";
+
+	dir("failurenotification") {
+		deleteDir();
+		unstash(results.replaceAll('/','_'));
+
+		/*
+		 * Specifying a relative path starting with "../" does not
+		 * work in notify attachments.
+		 * Copy serialboot.log into this folder.
+		 */
+		sh("cp ../${resultdir}/serialboot.log .");
+
+		def gittags = readFile "${results}/compile/gittags.properties";
+		gittags = gittags.replaceAll(/(?m)^\s*\n/, "");
+
+		notify("${recipients}",
+		       "boottest-runner - Build # ${env.BUILD_NUMBER} - failed! (total: \${WARNINGS_COUNT})",
+		       "boottestRunner",
+		       "serialboot.log,${results}/compile/config",
+		       false,
+		       ["global": global, "repo": repo,
+			"branch": branch, "config": config,
+			"overlay": overlay, "target": target,
+			"gittags": gittags]);
+	}
+}
+
+def call(Map global, String boottest, String recipients) {
 	def failed = false;
 	h = new helper();
 	try {
@@ -212,7 +243,8 @@ def call(Map global, String boottest) {
 			deleteDir();
 
 			unstash(global.STASH_PRODENV);
-			String[] properties = ["${boottest}.properties"];
+			String[] properties = ["environment.properties",
+					       "${boottest}.properties"];
 			h.add2environment(properties);
 
 			target = h.getEnv("TARGET");
@@ -221,6 +253,8 @@ def call(Map global, String boottest) {
 				error("environment TARGET not set. Abort.");
 			}
 
+			repo = h.getEnv("GITREPO");
+			branch = h.getEnv("BRANCH");
 			config = h.getEnv("CONFIG");
 			overlay = h.getEnv("OVERLAY");
 			kernel = "${config}/${overlay}";
@@ -229,7 +263,8 @@ def call(Map global, String boottest) {
 			boottestdir = "results/${kernel}/${target}";
 			resultdir = "boottest";
 
-			runner(global, h, boottest, boottestdir, resultdir);
+			runner(global, h, boottest, boottestdir, resultdir,
+			      recipients);
 		}
 	} catch (BoottestException ex) {
 		failed = true;
@@ -272,6 +307,10 @@ def call(Map global, String boottest) {
 		stash(name: boottest.replaceAll('/','_'),
 		      includes: "${resultdir}/pyjutest.xml, " +
 		      "${resultdir}/cmdline");
+
+		if (currentBuild.result == 'UNSTABLE') {
+			failnotify(global, repo, branch, config, overlay,
+				   resultdir, recipients);
 	}
 }
 
