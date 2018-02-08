@@ -1,0 +1,6 @@
+A CI-RT Testjob #${BUILD_NUMBER} failed.
+
+CI-RT test: ${upstreamProject} ${upstreamBuild}
+${upstreamURL}
+
+For further information please look at ${BUILD_URL}.
