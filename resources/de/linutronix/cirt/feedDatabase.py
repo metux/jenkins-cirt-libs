@@ -532,11 +532,15 @@ for boottest in boottests:
             compile_id, boottest, entry_owner, junit_res["system_out"],
             cmdline
             )
-        all_tests_passed = all_tests_passed and \
-            (junit_res["result"] == "pass")
-        cyclictests = listdir(
-            join(result_path, boottest, "cyclictest", boottest)
+
+        if (junit_res["result"] == "pass"):
+            cyclictests = listdir(
+                join(result_path, boottest, "cyclictest", boottest)
                 )
+        else:
+            all_tests_passed = False
+            cyclictests = []
+
         for cyclic in cyclictests:
             cyclic_path = join(result_path, boottest, "cyclictest",
                                boottest, cyclic)
