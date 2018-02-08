@@ -1,6 +1,7 @@
 #!/usr/bin/groovy
 
 import de.linutronix.cirt.helper;
+import hudson.AbortException
 
 def collectCompiletests(configs, overlays, unstashDir, helper) {
 	def config;
@@ -60,7 +61,14 @@ def runPythonScript(firstRun, lastRun, unstashDir, compiledir, helper) {
 def collectBoottests(compiledir, config, overlay, helper) {
 	def boottest;
 	def kernel;
-	unstash(compiledir.replaceAll('/','_'));
+	try {
+		unstash(compiledir.replaceAll('/','_'));
+	} catch (AbortException ex) {
+		/* catch non existing stash */
+		println("Feeddatabase Info only: "+ex.toString());
+		println("Feeddatabase Info only: "+ex.getMessage());
+	}
+
 	String configbootprop = "../compile/env/${config.replaceAll('/','_')}_${overlay}.properties";
 	String gittagsprop = compiledir + "/compile/gittags.properties";
 	def boot = fileExists "${configbootprop}";
@@ -79,7 +87,13 @@ def collectBoottests(compiledir, config, overlay, helper) {
 def collectCyclictests(boottest, kernel, helper) {
 	def cyclictest;
 	def cyclictestdir;
-	unstash(boottest.replaceAll('/','_'));
+	try {
+		unstash(boottest.replaceAll('/','_'));
+	} catch (AbortException ex) {
+		/* catch non existing stash */
+		println("Feeddatabase Info only: "+ex.toString());
+		println("Feeddatabase Info only: "+ex.getMessage());
+	}
 	String[] properties = ["../${boottest}.properties"];
 	helper.add2environment(properties);
 	def target = helper.getEnv('TARGET');
@@ -87,26 +101,40 @@ def collectCyclictests(boottest, kernel, helper) {
 	for (int l = 0; l < cyclictests.size(); l++) {
 		cyclictest = cyclictests.getAt(l)
 		cyclictestdir = "results/${kernel}/${target}/${cyclictest}";
-		unstash(cyclictest.replaceAll('/','_'));
+		try {
+			unstash(cyclictest.replaceAll('/','_'));
+		} catch (AbortException ex) {
+			/* catch non existing stash */
+			println("Feeddatabase Info only: "+ex.toString());
+			println("Feeddatabase Info only: "+ex.getMessage());
+		}
 	}
 }
 
 def call(Map global) {
-	println("feeding database");
-	dir("feedDatabase") {
-		deleteDir();
+	try {
+		println("feeding database");
+		dir("feedDatabase") {
+			deleteDir();
 
-		unstash(global.STASH_PRODENV);
-		String[] properties = ["environment.properties"];
-		h = new helper();
+			unstash(global.STASH_PRODENV);
+			String[] properties = ["environment.properties"];
+			h = new helper();
 
-		h.add2environment(properties);
+			h.add2environment(properties);
 
-		def unstashDir = "db_unstash"
-		def configs = h.getEnv('CONFIGS').split();
-		def overlays = h.getEnv('OVERLAYS').split();
+			def unstashDir = "db_unstash"
+			def configs = h.getEnv('CONFIGS').split();
+			def overlays = h.getEnv('OVERLAYS').split();
 
-		println("collect all results");
-		collectCompiletests(configs, overlays, unstashDir, h);
+			println("collect all results");
+			collectCompiletests(configs, overlays, unstashDir, h);
+		}
+	} catch(Exception ex) {
+		println("feeddatabase failed:");
+		println(ex.toString());
+		println(ex.getMessage());
+		println(ex.getStackTrace());
+		error("feeddatabase failed.");
 	}
 }
