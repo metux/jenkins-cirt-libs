@@ -243,6 +243,21 @@ def call(Map global, String boottest) {
 
 	dir("boottestRunner") {
 		resultdir = "${boottestdir}/" + resultdir;
+
+		/* parse boot.log for warnings */
+		warnings(canComputeNew: false,
+			 canResolveRelativePaths: false,
+			 canRunOnFailed: true,
+			 categoriesPattern: '',
+			 defaultEncoding: '',
+			 excludePattern: '',
+			 healthy: '',
+			 includePattern: '',
+			 messagesPattern: '',
+			 parserConfigurations: [[parserName: 'Linux Kernel Output Parser',
+						 pattern: "${resultdir}/boot.log"]],
+			 unHealthy: '');
+
 		script_content = libraryResource('de/linutronix/cirt/boottest/boottest2xml.py');
 		writeFile file:"boottest2xml", text:script_content;
 		if (failed) {
