@@ -194,15 +194,6 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 				if (cyclictests) {
 					cyclictest(global, target, cyclictests);
 				}
-			} catch (BoottestException ex) {
-				println("Booting into Kernel under test failed. Mark build as unstable.");
-				currentBuild.result = 'UNSTABLE';
-			} catch (Exception ex) {
-				println("boottest \"${boottest}\" failed:");
-				println(ex.toString());
-				println(ex.getMessage());
-				println(ex.getStackTrace());
-				error("boottest \"${boottest}\" failed.");
 			} finally {
 				println("Reboot into default kernel");
 				rebootTarget(hypervisor, target, seriallog_default, false);
@@ -240,30 +231,31 @@ def call(Map global, String boottest) {
 
 			runner(global, h, boottest, boottestdir, resultdir);
 		}
-	} catch(Exception ex) {
+	} catch (BoottestException ex) {
 		failed = true;
+	} catch(Exception ex) {
 		println("boottest \"${boottest}\" failed:");
 		println(ex.toString());
 		println(ex.getMessage());
 		println(ex.getStackTrace());
 		error("boottest \"${boottest}\" failed.");
-	} finally {
-		dir("boottestRunner") {
-			resultdir = "${boottestdir}/" + resultdir;
-			archiveArtifacts(artifacts: "${resultdir}/**",
-					 fingerprint: true);
-			script_content = libraryResource('de/linutronix/cirt/boottest/boottest2xml.py');
-			writeFile file:"boottest2xml", text:script_content;
-			if (failed) {
-				sh("python3 boottest2xml ${boottest} ${boottestdir} failure")
-			} else {
-				sh("python3 boottest2xml ${boottest} ${boottestdir}")
-			}
-			junit("${resultdir}/pyjutest.xml");
-			stash(name: boottest.replaceAll('/','_'),
-			      includes: "${resultdir}/pyjutest.xml, " +
-					"${resultdir}/cmdline");
+	}
+
+	dir("boottestRunner") {
+		resultdir = "${boottestdir}/" + resultdir;
+		archiveArtifacts(artifacts: "${resultdir}/**",
+				 fingerprint: true);
+		script_content = libraryResource('de/linutronix/cirt/boottest/boottest2xml.py');
+		writeFile file:"boottest2xml", text:script_content;
+		if (failed) {
+			sh("python3 boottest2xml ${boottest} ${boottestdir} failure")
+		} else {
+			sh("python3 boottest2xml ${boottest} ${boottestdir}")
 		}
+		junit("${resultdir}/pyjutest.xml");
+		stash(name: boottest.replaceAll('/','_'),
+		      includes: "${resultdir}/pyjutest.xml, " +
+		      "${resultdir}/cmdline");
 	}
 }
 
