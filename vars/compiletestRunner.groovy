@@ -137,12 +137,39 @@ fi
 	      includes: "${compiledir}/${resultdir}/pyjutest.xml, " +
 			"${compiledir}/${resultdir}/compile-script.sh, " +
 			"${compiledir}/${resultdir}/gittags.properties, " +
+			"${compiledir}/${resultdir}/package.log, " +
+			"${compiledir}/${resultdir}/config, " +
+			"${compiledir}/${resultdir}/compile.log, " +
 			"${compiledir}/${builddir}/defconfig",
 	      allowEmpty: true);
 }
 
+private failnotify(Map global, String repo, String branch, String config,
+		   String overlay, String recipients)
+{
+	dir("failurenotification") {
+		deleteDir();
+
+		def results = "results/${config}/${overlay}";
+		unstash(results.replaceAll('/','_'));
+
+		def gittags = readFile "${results}/compile/gittags.properties";
+		gittags = gittags.replaceAll(/(?m)^\s*\n/, "");
+
+		notify("${recipients}",
+		       "compiletest-runner - Build # ${env.BUILD_NUMBER} - failed! (total: \${WARNINGS_COUNT})",
+		       "compiletestRunner",
+		       "${results}/compile/compile.log,${results}/compile/package.log,${results}/compile/config",
+		       false,
+		       ["global": global, "repo": repo,
+			"branch": branch, "config": config,
+			"overlay": overlay,
+			"gittags": gittags]);
+	}
+}
+
 def call(Map global, String repo, String branch,
-	 String config, String overlay) {
+	 String config, String overlay, String recipients) {
 	try {
 		inputcheck.check(global);
 		node ('kernel') {
@@ -171,6 +198,11 @@ def call(Map global, String repo, String branch,
 								 pattern: "${compiledir}/**/package.log"]],
 					 unHealthy: '');
 			}
+		}
+
+		if (currentBuild.result == 'UNSTABLE') {
+			failnotify(global, repo, branch, config,
+				   overlay, recipients);
 		}
 	} catch(Exception ex) {
                 println("compiletest runner failed:");

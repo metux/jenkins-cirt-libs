@@ -1,0 +1,24 @@
+compiletest-runner - Build # ${BUILD_NUMBER} - failed!
+
+CI-RT test: ${upstreamProject} ${upstreamBuild}
+${upstreamURL}
+
+branch : ${branch}
+config : ${config}
+overlay: ${overlay}
+
+git infos:
+${repo}
+${gittags}
+
+Check console output for detailed information at ${BUILD_URL}console
+
+All warnings (detailed):
+========================
+Errors:
+-------
+\${WARNINGS_DETAILED,linechar="~",indent=4,high=true,normal=false,low=false}
+
+Warnings:
+---------
+\${WARNINGS_DETAILED,linechar="~",indent=4,high=false,normal=true,low=false}

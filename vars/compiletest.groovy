@@ -7,7 +7,7 @@ import de.linutronix.cirt.helper;
 import de.linutronix.cirt.inputcheck;
 
 private compileJob(Map global, String config, String overlay,
-		   String repo, String branch) {
+		   String repo, String branch, String recipients) {
 	/* fileExists is a relative query! */
 	configbootprop = "compile/env/${config.replaceAll('/','_')}_${overlay}.properties";
 	boot = fileExists "${configbootprop}";
@@ -33,7 +33,8 @@ private compileJob(Map global, String config, String overlay,
 				 */
 				dir("../") {
 					compiletestRunner(global, repo, branch,
-							  config, overlay);
+							  config, overlay,
+							  recipients);
 				}
 			}
 			stage ("Boottests ${config} ${overlay}") {
@@ -66,7 +67,8 @@ private compileJob(Map global, String config, String overlay,
 				 */
 				dir("../") {
 					compiletestRunner(global, repo, branch,
-							  config, overlay);
+							  config, overlay,
+							  recipients);
 				}
 			}
 		}
@@ -74,7 +76,7 @@ private compileJob(Map global, String config, String overlay,
 }
 
 private compile(Map global, String[] configs, String[] overlays,
-		String gitrepo, String gitcheckout) {
+		String gitrepo, String gitcheckout, String recipients) {
 	def stepsForParallel = [:];
 
 	for (int i = 0; i < configs.size(); i++) {
@@ -85,7 +87,8 @@ private compile(Map global, String[] configs, String[] overlays,
 					   "${configs.getAt(i)}",
 					   "${overlays.getAt(j)}",
 					   gitrepo,
-					   gitcheckout);
+					   gitcheckout,
+					   recipients);
 		}
 	}
 
@@ -113,15 +116,17 @@ def call(Map global) {
 				overlays = environment['OVERLAYS'].split();
 				gitrepo = environment['GITREPO'];
 				gitcheckout = environment['GIT_CHECKOUT'];
+				recipients = environment['RECIPIENTS'].trim();
 			}
 			/* Catches not set environment Parameters */
 			catch (java.lang.NullPointerException e) {
 				println(e.toString());
 				println(e.getMessage());
 				println(e.getStackTrace());
-				error("CONFIGS, OVERLAYS, GITREPO or GIT_CHECKOUT not set. Abort.");
+				error("CONFIGS, OVERLAYS, GITREPO, GIT_CHECKOUT or RECIPIENTS not set. Abort.");
 			}
-			compile(global, configs, overlays, gitrepo, gitcheckout);
+			compile(global, configs, overlays, gitrepo,
+				gitcheckout, recipients);
 		}
 	} catch(Exception ex) {
                 println("compiletest failed:");
