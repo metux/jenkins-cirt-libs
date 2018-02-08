@@ -49,6 +49,12 @@ sudo cyclictest -q -m -Sp99 -D${duration} -i${interval} -h${limit} -b${limit} --
 
 	stash(name: cyclictest.replaceAll('/','_'),
 	      includes: "${cyclictestdir}/histogram.*");
+
+	/*
+	 * no mail notification here since test examination need
+	 * to run on master.
+	 * See cyclictest.groovy.
+	 */
 }
 
 def call(Map global, String target, String cyclictest) {

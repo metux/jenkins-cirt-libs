@@ -1,0 +1,23 @@
+cyclictest-runner - Build # ${BUILD_NUMBER} - failed!
+
+CI-RT test: ${upstreamProject} ${upstreamBuild}
+${upstreamURL}
+
+branch  : ${branch}
+config  : ${config}
+overlay : ${overlay}
+target  : ${target}
+
+interval: ${interval}
+limit   : ${limit}
+
+git infos:
+${repo}
+${gittags}
+
+Check console output for detailed information at ${BUILD_URL}console
+
+loadgen: ${loadgen}
+
+cyclictest command:
+\${FILE, path="histogram.sh"}

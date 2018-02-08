@@ -192,7 +192,8 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 
 				cyclictests = helper.getEnv("CYCLICTESTS").split();
 				if (cyclictests) {
-					cyclictest(global, target, cyclictests);
+					cyclictest(global, target, cyclictests,
+						   recipients);
 				}
 			} finally {
 				println("Reboot into default kernel");

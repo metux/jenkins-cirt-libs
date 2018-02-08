@@ -6,7 +6,48 @@
 import de.linutronix.cirt.inputcheck;
 import de.linutronix.cirt.helper;
 
-private parse_results(Map global, String target, String ct)
+private failnotify(Map global, helper h, String target,
+		   String cyclictestdir, String recipients)
+{
+	def loadgen = h.getEnv("LOADGEN")?.trim();
+	def interval = h.getEnv("INTERVAL");
+	def limit = h.getEnv("LIMIT");
+	def duration = h.getEnv("DURATION");
+	def repo = h.getEnv("GITREPO");
+	def branch = h.getEnv("BRANCH");
+	def config = h.getEnv("CONFIG");
+	def overlay = h.getEnv("OVERLAY");
+	def results = "results/${config}/${overlay}";
+
+	dir("failurenotification") {
+		deleteDir();
+		unstash(results.replaceAll('/','_'));
+
+		/*
+		 * Specifying a relative path starting with "../" does not
+		 * work in notify attachments.
+		 * Copy cyclictest results into this folder.
+		 */
+		sh("cp ../${cyclictestdir}/histogram.* .");
+
+		def gittags = readFile "${results}/compile/gittags.properties";
+		gittags = gittags.replaceAll(/(?m)^\s*\n/, "");
+
+		notify("${recipients}",
+		       "cyclictest-runner - Build # $BUILD_NUMBER - failed!",
+		       "cyclictestRunner",
+		       "histogram.*",
+		       false,
+		       ["global": global, "repo": repo,
+			"branch": branch, "config": config,
+			"overlay": overlay, "target": target,
+			"limit": limit, "interval": interval,
+			"loadgen": loadgen, "cyclictestdir": cyclictestdir,
+			"gittags": gittags]);
+	}
+}
+
+private parse_results(Map global, String target, String ct, String recipients)
 {
 	unstash(global.STASH_PRODENV);
 	h = new helper();
@@ -34,9 +75,13 @@ private parse_results(Map global, String target, String ct)
 	stash(name: ct.replaceAll('/','_'),
 	      includes: "${cyclictestdir}/histogram.*," +
 			"${cyclictestdir}/pyjutest.xml");
+
+	if (currentBuild.result == 'UNSTABLE') {
+		failnotify(global, h, target, cyclictestdir, recipients);
+	}
 }
 
-def call(Map global, String target, String[] cyclictests) {
+def call(Map global, String target, String[] cyclictests, String recipients) {
 	try {
                 inputcheck.check(global);
 		node('master') {
@@ -50,7 +95,8 @@ def call(Map global, String target, String[] cyclictests) {
 					 * workspace directory doesn't has to be changed
 					 */
 					cyclictestRunner(global, target, ct);
-					parse_results(global, target, ct);
+					parse_results(global, target, ct,
+						      recipients);
 				}
 			}
 		}
