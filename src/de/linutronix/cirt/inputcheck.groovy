@@ -20,10 +20,6 @@ static def check(Map global) {
         if (!global.STASH_COMPILECONF?.trim()) {
                 error("variable STASH_COMPILECONF not set.");
         }
-
-        if (!global.TESTDESCRIPTION_REPO?.trim()) {
-                error("variable TESTDESCRIPTION_REPO not set.");
-        }
 }
 
 static def check(String branch, Map global) {

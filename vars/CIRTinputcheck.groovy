@@ -20,14 +20,6 @@ def call(Map global) {
 		if (!global.STASH_COMPILECONF?.trim()) {
 			error("variable STASH_COMPILECONF not set.");
 		}
-
-		if (!global.TESTDESCRIPTION_REPO?.trim()) {
-			error("variable TESTDESCRIPTION_REPO not set.");
-		}
-
-		if (!global.GUI_TESTDESCR_BRANCH?.trim()) {
-			error("variable GUI_TESTDESCR_BRANCH not set.");
-		}
 	}
 }
 
