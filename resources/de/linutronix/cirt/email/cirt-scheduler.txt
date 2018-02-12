@@ -1,0 +1,26 @@
+cirt-scheduler - Build #${BUILD_NUMBER} - ${status}!
+
+CI-RT test: ${BRANCH_NAME} #${BUILD_NUMBER}
+${BUILD_URL}
+
+Check console output for detailed information at ${BUILD_URL}console
+
+
+------------------------
+Output of Warnings-Plugin (parse of build.log and boot.log)
+
+Total Warnings: \${WARNINGS_COUNT}
+New Warnings: \${WARNINGS_NEW}
+Fixed Warnings: \${WARNINGS_FIXED}
+
+New warnings (detailed):
+------------------------
+\${WARNINGS_NEW_DETAILED,modules="GNU Make + GNU C Compiler (gcc)",modules="Linux Kernel Output Parser",linechar="~",indent=4}
+
+Fixed warnings (detailed):
+--------------------------
+\${WARNINGS_FIXED_DETAILED,modules="GNU Make + GNU C Compiler (gcc)",modules="Linux Kernel Output Parser",linechar="~",indent=4}
+
+All warnings (detailed):
+------------------------
+\${WARNINGS_DETAILED,modules="GNU Make + GNU C Compiler (gcc)",modules="Linux Kernel Output Parser",linechar="~",indent=4}
