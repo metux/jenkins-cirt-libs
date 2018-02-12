@@ -34,7 +34,7 @@ private failnotify(Map global, helper h, String target,
 		gittags = gittags.replaceAll(/(?m)^\s*\n/, "");
 
 		notify("${recipients}",
-		       "cyclictest-runner - Build # $BUILD_NUMBER - failed!",
+		       "cyclictest-runner failed!",
 		       "cyclictestRunner",
 		       "histogram.*",
 		       false,

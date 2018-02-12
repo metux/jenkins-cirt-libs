@@ -1,7 +1,7 @@
-boottest-runner - Build # ${BUILD_NUMBER} - failed!
+boottest-runner - Build #${BUILD_NUMBER} - failed!
 
-CI-RT test: ${upstreamProject} ${upstreamBuild}
-${upstreamURL}
+CI-RT test: ${BRANCH_NAME} #${BUILD_NUMBER}
+${BUILD_URL}
 
 branch : ${branch}
 config : ${config}

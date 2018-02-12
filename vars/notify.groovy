@@ -36,10 +36,8 @@ def call(String to, String subject, String templatename, String attachment,
 	println("Send Email notification to ${to}");
 	println("Email template: ${templatename}");
 
-	up = upstreaminfo();
-
 	variables << currentBuild.getRawBuild().getEnvironment();
-	variables << up;
+	subject = "${env.BRANCH_NAME} #${env.BUILD_NUMBER} - ${subject}"
 
 	def template = libraryResource("de/linutronix/cirt/email/${templatename}.txt");
 	def body = renderTemplate(template, variables);

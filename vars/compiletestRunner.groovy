@@ -160,7 +160,7 @@ private failnotify(Map global, String repo, String branch, String config,
 		gittags = gittags.replaceAll(/(?m)^\s*\n/, "");
 
 		notify("${recipients}",
-		       "compiletest-runner - Build # ${env.BUILD_NUMBER} - failed! (total: \${WARNINGS_COUNT})",
+		       "compiletest-runner failed! (total: \${WARNINGS_COUNT})",
 		       "compiletestRunner",
 		       "${results}/compile/compile.log,${results}/compile/package.log,${results}/compile/config",
 		       false,

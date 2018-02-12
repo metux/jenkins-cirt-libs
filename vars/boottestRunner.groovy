@@ -240,7 +240,7 @@ private failnotify(Map global, String repo, String branch, String config,
 		gittags = gittags.replaceAll(/(?m)^\s*\n/, "");
 
 		notify("${recipients}",
-		       "boottest-runner - Build # ${env.BUILD_NUMBER} - failed! (total: \${WARNINGS_COUNT})",
+		       "boottest-runner failed! (total: \${WARNINGS_COUNT})",
 		       "boottestRunner",
 		       "serialboot.log,${results}/compile/config",
 		       false,
