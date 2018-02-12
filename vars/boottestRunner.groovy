@@ -72,8 +72,14 @@ echo $! >'''+""" ${pidfile}"""
 	if (testboot) {
 		sh "ssh ${target} \"sudo shutdown -r -t +1\"";
 	} else {
+		/*
+		 * Reboot into default kernel: If board didn't came up
+		 * properly, the reboot is forced. Sleep between
+		 * destroy and start for half a minute to be sure
+		 * capacitors do not create wrong state on poweron.
+		 */
 		sh """ssh ${target} \"sudo shutdown -r -t +1\" || \
-(virsh -c ${hypervisor} destroy ${target}; sleep 1; virsh -c ${hypervisor} start ${target})""";
+(virsh -c ${hypervisor} destroy ${target}; sleep 30; virsh -c ${hypervisor} start ${target})""";
 	}
 
 	/*
