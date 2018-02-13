@@ -165,10 +165,9 @@ class Tags (Base):
     name = Column(String)
     git_id = Column(Integer, ForeignKey('git.id'))
 
-
 class Cirtscheduler (Base):
     __tablename__ = 'cirtscheduler'
-    cirtscheduler_id = Column('id', Integer, primary_key=True)
+    cirtscheduler_id = Column('id', Integer, primary_key=True, autoincrement=True)
     branch = Column(String(80))
     timestamp = Column(TIMESTAMP)
     tags_id = Column(Integer, ForeignKey('tags.id'))
@@ -320,10 +319,9 @@ class CirtDB():
                 tags_id = new_tag.tags_id
         return tags_id
 
-    def submit_cirtscheduler(self, scheduler_id,
+    def submit_cirtscheduler(self, build_id,
                              tags_id, branch, entry_owner):
         new_cirtscheduler = Cirtscheduler(
-            cirtscheduler_id=scheduler_id,
             branch=branch,
             timestamp=get_current_time(),
             pass_=False,
@@ -335,10 +333,10 @@ class CirtDB():
             s.commit()
             return new_cirtscheduler.cirtscheduler_id
 
-    def submit_cirtbranch(self, testbranch,
-                          commit, scheduler_id, entry_owner):
+    def submit_cirtbranch(self, testbranch, commit,
+                          build_id, scheduler_id, entry_owner):
         new_cirtbranch = Cirtbranch(
-            cirtbranch_id=scheduler_id,
+            cirtbranch_id=build_id,
             testbranch=testbranch,
             commit=commit,
             cirtscheduler_id=scheduler_id,
@@ -477,7 +475,7 @@ parser.add_argument('--first_run', required=True)
 parser.add_argument('--last_run', required=True)
 args = parser.parse_args()
 
-scheduler_id = args.buildnumber
+build_id = args.buildnumber
 arch = dirname(args.config)
 configname = basename(args.config)
 
@@ -499,10 +497,10 @@ if first_run == "first_run":
         args.tags_commit, args.tags_name, git_id
         )
     scheduler_id = db.submit_cirtscheduler(
-        scheduler_id, tags_id, args.branch, entry_owner
+        build_id, tags_id, args.branch, entry_owner
         )
     db.submit_cirtbranch(
-        args.git_branch, args.git_commit, scheduler_id, entry_owner
+        args.git_branch, args.git_commit, build_id, scheduler_id, entry_owner
         )
 
 junit_res = parse_junit(join(result_path, "compile", "pyjutest.xml"))
