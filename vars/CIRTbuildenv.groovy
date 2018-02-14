@@ -278,6 +278,8 @@ private buildCompileEnv(String globalenv) {
 private buildEnv(String commit) {
 	String globalenv = buildGlobalEnv(commit);
 	buildCompileEnv(globalenv);
+
+	return globalenv;
 }
 
 def call(String commit, Map global) {
@@ -288,7 +290,7 @@ def call(String commit, Map global) {
 				deleteDir();
 				unstash(global.STASH_RAWENV);
 
-				buildEnv(commit);
+				globalenv = buildEnv(commit);
 
 				/*
 				 * Stash *.properties files; directory
@@ -304,6 +306,8 @@ def call(String commit, Map global) {
 			}
 			archiveArtifacts(artifacts: 'environment/**/*.properties, environment/patches/**, environment/compile/configs/**, environment/compile/overlays/**',
 					 fingerprint: true);
+
+			return getValue(globalenv, "RECIPIENTS")
 		}
 	} catch(Exception ex) {
 		println("CIRTbuildenv failed:");
