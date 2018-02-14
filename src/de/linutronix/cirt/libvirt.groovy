@@ -90,6 +90,7 @@ static online(String target, String reason, Boolean fail = true) {
 					throw new hudson.AbortException("Target ${computer.name} is online. Abort.");
 				} else {
 					println("Target ${computer.name} is already online.");
+					return;
 				}
 			}
 			println("Online ${computer.name}: ${reason}");
