@@ -159,7 +159,7 @@ private buildArchCompileEnv(List configs)
 
 		archcompile['ARCH'] = arch;
 
-		def map = compile;
+		def map = compile.clone();
 		def properties = "";
 		archcompile.each { k, v -> map[k] = v }
 		map.each { k, v ->
