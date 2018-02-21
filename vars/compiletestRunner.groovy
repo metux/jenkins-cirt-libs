@@ -23,7 +23,15 @@ private runner(Map global, String repo, String branch,
 
 	dir(compiledir) {
 		deleteDir();
-
+		/*
+		 * Specify a depth of 1. If last commit is no tag "git
+		 * describe HEAD" will not work. Fetching the whole
+		 * history precautionary, takes a lot of time and is
+		 * not required when the last commit is a
+		 * tag. Fetching the required history is done before
+		 * writing the gittags.properties file when required
+		 * (see comment below as well).
+		 */
 		checkout([$class: 'GitSCM', branches: [[name: "${branch}"]],
 			  doGenerateSubmoduleConfigurations: false,
 			  extensions: [[$class: 'CloneOption',
@@ -43,6 +51,12 @@ private runner(Map global, String repo, String branch,
 
 		/* Extract gittag information for db entry */
 		dir(resultdir) {
+			/*
+			 * When "git describe HEAD" does not work more
+			 * history depth is required; it is possible
+			 * as well to "unshallow" the git repository.
+			 */
+			sh 'git describe HEAD || git fetch --depth 1000';
 			sh """echo "TAGS_COMMIT=\$(git rev-parse HEAD)" >> gittags.properties""";
 			sh """echo "TAGS_NAME=\$(git describe HEAD)" >> gittags.properties""";
 		}
