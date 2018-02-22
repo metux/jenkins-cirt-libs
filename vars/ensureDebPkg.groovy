@@ -11,9 +11,9 @@ def check_pkgversion(String pkg, String dver)
 	sh("dpkg -l $pkg | grep ^ii")
 	if (dver != "None") {
 		// used to check version
-		dpkg = sh(returnStdout: true, script: "dpkg -l $pkg | grep ^ii")
-		dpkg_pkg = dpkg.split()[1]
-		dpkg_ver = dpkg.split()[2]
+		def dpkg = sh(returnStdout: true, script: "dpkg -l $pkg | grep ^ii")
+		def dpkg_pkg = dpkg.split()[1]
+		def dpkg_ver = dpkg.split()[2]
 		// this raises an exception if the package version is not correct
 		sh("dpkg --compare-versions $dpkg_ver = $dver")
 	}
@@ -32,8 +32,8 @@ def call(Map p = [:])
 	}
 
 	for (int i = 0; i < p.ensure_pkgs.size; i++) {
-		pkg = p.ensure_pkgs[i].name
-		dver = "None"
+		def pkg = p.ensure_pkgs[i].name;
+		def dver = "None";
 		if (p.ensure_pkgs[i].version)
 			dver = p.ensure_pkgs[i].version
 		try {
