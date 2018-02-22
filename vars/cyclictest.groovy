@@ -54,9 +54,12 @@ private parse_results(Map global, String target, String ct, String recipients)
 			       "boot/${target}.properties",
 			       "${ct}.properties"];
 	h.add2environment(properties);
+	properties = null;
 	def config = h.getEnv("CONFIG");
 	def overlay = h.getEnv("OVERLAY");
 	def kernel = "${config}/${overlay}";
+	config = null;
+	overlay = null;
 
 	def cyclictestdir = "results/${kernel}/${target}/${ct}";
 	unstash(cyclictestdir.replaceAll('/','_'));
