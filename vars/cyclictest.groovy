@@ -60,7 +60,7 @@ private parse_results(Map global, String target, String ct, String recipients)
 	kernel = "${config}/${overlay}";
 
 	cyclictestdir = "results/${kernel}/${target}/${ct}";
-	unstash(ct.replaceAll('/','_'));
+	unstash(cyclictestdir.replaceAll('/','_'));
 
 	script_content = libraryResource('de/linutronix/cirt/cyclictest/cyclictest2xml.py');
 	writeFile file:"collect", text:script_content;
@@ -72,7 +72,7 @@ private parse_results(Map global, String target, String ct, String recipients)
 
 	def result = junit_result("${cyclictestdir}/pyjutest.xml");
 	archiveArtifacts("${cyclictestdir}/pyjutest.xml");
-	stash(name: ct.replaceAll('/','_'),
+	stash(name: cyclictestdir.replaceAll('/','_'),
 	      includes: "${cyclictestdir}/histogram.*," +
 			"${cyclictestdir}/pyjutest.xml");
 

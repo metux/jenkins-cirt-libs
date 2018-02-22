@@ -47,7 +47,7 @@ sudo cyclictest -q -m -Sp99 -D${duration} -i${interval} -h${limit} -b${limit} --
 
 	archiveArtifacts("${cyclictestdir}/histogram.*");
 
-	stash(name: cyclictest.replaceAll('/','_'),
+	stash(name: cyclictestdir.replaceAll('/','_'),
 	      includes: "${cyclictestdir}/histogram.*");
 
 	/*

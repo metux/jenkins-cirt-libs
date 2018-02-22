@@ -102,7 +102,7 @@ def collectCyclictests(boottest, kernel, helper) {
 		cyclictest = cyclictests.getAt(l)
 		cyclictestdir = "results/${kernel}/${target}/${cyclictest}";
 		try {
-			unstash(cyclictest.replaceAll('/','_'));
+			unstash(cyclictestdir.replaceAll('/','_'));
 		} catch (AbortException ex) {
 			/* catch non existing stash */
 			println("Feeddatabase Info only: "+ex.toString());
