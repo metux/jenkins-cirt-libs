@@ -6,7 +6,7 @@
 import de.linutronix.cirt.inputcheck;
 
 private String readCleanFile(String filename) {
-	content = readFile(filename);
+	def content = readFile(filename);
 
 	/* remove all lines beginning with # (comments only) */
 	content = content.replaceAll(/(?m)^#.*\n/, "");
@@ -46,6 +46,7 @@ private String handleLists(String globalenv) {
 }
 
 private String prepareGlobalEnv(String globalenv, String commit) {
+	def branch = '';
 	/* no need to set PUBLICREPO if found earlier */
 	def m = globalenv =~ /\s*PUBLICREPO\s*=.*/
 	if (m.count) {
@@ -173,7 +174,7 @@ private prepareCyclictestEnv(String boottest) {
 	def content = readCleanFile(boottest);
 
 	if (content =~ /\s*CYCLICTEST\s*=.*/) {
-		cyclictest = content =~ /\s*CYCLICTEST\s*=.*/
+		def cyclictest = content =~ /\s*CYCLICTEST\s*=.*/
 		cyclictest = cyclictest[0] - ~/\s*CYCLICTEST\s*=/
 
 		cyclictests = list2prop(cyclictest, "CYCLICTESTS");
@@ -182,8 +183,8 @@ private prepareCyclictestEnv(String boottest) {
 		cyclictests = cyclictests.split();
 
 		for (int i = 0; i < cyclictests.size(); i++) {
-			cyclictest = cyclictests.getAt(i);
-			sh("cp ${cyclictest} ${cyclictest}.properties");
+			def ct = cyclictests.getAt(i);
+			sh("cp ${ct} ${ct}.properties");
 		}
 	}
 
@@ -263,7 +264,7 @@ private String getValue(String content, String key) {
 private buildCompileEnv(String globalenv) {
 	List configs = getValue(globalenv, "CONFIGS").split();
 	List overlays = getValue(globalenv, "OVERLAYS").split();
-	bootlist = list2prop('env/boottest.list', 'BOOTTESTS_ALL');
+	def bootlist = list2prop('env/boottest.list', 'BOOTTESTS_ALL');
 	List boottests = getValue(bootlist, "BOOTTESTS_ALL").split();
 
 	buildArchCompileEnv(configs);
@@ -285,6 +286,7 @@ def call(String commit, Map global) {
 	inputcheck.check(global);
 	try {
 		node('master') {
+			def globalenv;
 			dir('environment') {
 				deleteDir();
 				unstash(global.STASH_RAWENV);
