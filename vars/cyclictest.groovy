@@ -12,7 +12,6 @@ private failnotify(Map global, helper h, String target,
 	def loadgen = h.getEnv("LOADGEN")?.trim();
 	def interval = h.getEnv("INTERVAL");
 	def limit = h.getEnv("LIMIT");
-	def duration = h.getEnv("DURATION");
 	def repo = h.getEnv("GITREPO");
 	def branch = h.getEnv("BRANCH");
 	def config = h.getEnv("CONFIG");
