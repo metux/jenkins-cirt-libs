@@ -49,16 +49,16 @@ private failnotify(Map global, helper h, String target,
 private parse_results(Map global, String target, String ct, String recipients)
 {
 	unstash(global.STASH_PRODENV);
-	h = new helper();
+	def h = new helper();
 	String[] properties = ["environment.properties",
 			       "boot/${target}.properties",
 			       "${ct}.properties"];
 	h.add2environment(properties);
-	config = h.getEnv("CONFIG");
-	overlay = h.getEnv("OVERLAY");
-	kernel = "${config}/${overlay}";
+	def config = h.getEnv("CONFIG");
+	def overlay = h.getEnv("OVERLAY");
+	def kernel = "${config}/${overlay}";
 
-	cyclictestdir = "results/${kernel}/${target}/${ct}";
+	def cyclictestdir = "results/${kernel}/${target}/${ct}";
 	unstash(cyclictestdir.replaceAll('/','_'));
 
 	script_content = libraryResource('de/linutronix/cirt/cyclictest/cyclictest2xml.py');
@@ -88,7 +88,7 @@ def call(Map global, String target, String[] cyclictests, String recipients) {
 			dir ("cyclictest") {
 				deleteDir();
 				for (int i = 0; i < cyclictests.size(); i++) {
-					ct = cyclictests[i];
+					def ct = cyclictests[i];
 
 					/*
 					 * Cyclictest runner is executed on target;
