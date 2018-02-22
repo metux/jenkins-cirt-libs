@@ -178,6 +178,7 @@ private prepareCyclictestEnv(String boottest) {
 		cyclictest = cyclictest[0] - ~/\s*CYCLICTEST\s*=/
 
 		cyclictests = list2prop(cyclictest, "CYCLICTESTS");
+		cyclictest = null
 		content += cyclictests;
 		cyclictests -= ~/\s*CYCLICTESTS\s*=/
 		cyclictests = cyclictests.split();
