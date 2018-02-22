@@ -23,6 +23,7 @@ private runboottest(Map global, String[] boottests, String recipients) {
 		//def jobName = "Boottest ${boottest}";
 		//stepsForParallel[jobName] =
 		boottestJob(global, "${boottest}", recipients);
+		boottest = null;
 	};
 
 	//parallel(stepsForParallel);

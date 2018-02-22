@@ -53,6 +53,7 @@ echo $! >'''+""" ${pidfile}"""
 		 */
 		sleep(time: 5, unit: 'SECONDS');
 		def output = readFile(virshoutput).trim()
+		virshoutput = null;
 		if (output) {
 			println("Virsh console logging Problem (target properly written and logfile writeable?): " + output);
 			/* TODO: throw exception; IT Problem */
@@ -64,6 +65,7 @@ echo $! >'''+""" ${pidfile}"""
 	 * Fail on an offline node on a test boot, warn otherwise.
 	 */
 	libvirt.offline(target, off_message, testboot);
+	off_message = null;
 
 	/*
 	 * Brave New World: systemd kills the network before ssh
@@ -99,6 +101,7 @@ echo $! >'''+""" ${pidfile}"""
 	if (testboot) {
 		println("kill seriallog");
 		def pid = readFile(pidfile).trim();
+		pidfile = null;
 		sh "kill ${pid}";
 	}
 }
@@ -141,6 +144,7 @@ private checkOnline(String target, Boolean testboot) {
 
 		/* Set target online */
 		libvirt.online(target, on_message, testboot);
+		on_message = null;
 	} catch (AbortException ex) {
 		println("Target ${target} is not online after 310 seconds");
 
@@ -155,6 +159,7 @@ private checkOnline(String target, Boolean testboot) {
 	/* Test for the proper kernel version */
 	sh 'echo $(ssh '+target+' uname -r | sed \"s/.*-rt[0-9]\\+-\\([0-9]\\+\\).*$/\\1/\") > '+versionfile;
 	def version = readFile(versionfile).trim();
+	versionfile = null;
 
 	if (testboot && version != env.BUILD_NUMBER) {
 		println("The booted kernel version \"${version}\" on target ${target} differs from version under test.");
@@ -175,6 +180,8 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 	def config = helper.getEnv("CONFIG");
 	def overlay = helper.getEnv("OVERLAY");
 	def kernel = "${config}/${overlay}";
+	config = null;
+	overlay = null;
 
 	dir(boottestdir) {
 		deleteDir();
@@ -200,16 +207,20 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 			libvirt.wait4onlineTimeout(target, 120);
 
 			targetprep(global, target, kernel);
+			kernel = null;
 
 			try {
 				rebootTarget(hypervisor, target, seriallog, true);
 
 				writeBootlog(seriallog, bootlog);
+				seriallog = null;
+				bootlog = null;
 
 				checkOnline(target, true);
 
 				/* write cmdline to file */
 				sh "echo \$(ssh ${target} cat /proc/cmdline) > ${cmdlinefile}";
+				cmdlinefile = null;
 
 				def cyclictests = helper.getEnv("CYCLICTESTS").split();
 				if (cyclictests) {
@@ -223,6 +234,7 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 			} finally {
 				println("Reboot into default kernel");
 				rebootTarget(hypervisor, target, seriallog_default, false);
+				seriallog_default = null;
 				checkOnline(target, false);
 			}
 		}
@@ -295,9 +307,11 @@ def call(Map global, String boottest, String recipients) {
 
 			/* Last subdirectory "boottest" for results is created by scripts */
 			boottestdir = "results/${kernel}/${target}";
+			kernel = null;
 
 			runner(global, h, boottest, boottestdir, resultdir,
 			      recipients);
+			h = null;
 		}
 	} catch (BoottestException ex) {
 		failed = true;
@@ -330,6 +344,7 @@ def call(Map global, String boottest, String recipients) {
 
 		def script_content = libraryResource('de/linutronix/cirt/boottest/boottest2xml.py');
 		writeFile file:"boottest2xml", text:script_content;
+		script_content = null;
 		if (failed) {
 			sh("python3 boottest2xml ${boottest} ${boottestdir} failure")
 		} else {
