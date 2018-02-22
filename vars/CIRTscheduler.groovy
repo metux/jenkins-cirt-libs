@@ -5,6 +5,7 @@
 import de.linutronix.cirt.inputcheck;
 
 def call(body) {
+	def recipients;
 	// evaluate the body block, and collect configuration into the object
 	def global = [:]
 	body.resolveStrategy = Closure.DELEGATE_FIRST
