@@ -111,14 +111,13 @@ private writeBootlog(String seriallog, String bootlog) {
 	/* error, if kexec_delimiter do not occur, or occurs more than one time */
 	def cnt = serial_splits.size() - 1;
 	if (cnt != 1) {
-		boot_content = serial_content;
+		writeFile file:bootlog, text:serial_content;
 		error message:"kexec delimiter \"${kexec_delimiter}\" occurs "+cnt+"time";
 	} else {
 		/* remove all lines which are no kernel output */
-		boot_content = serial_splits[1].replaceAll(/(?m)^[^\[]*/, "");
+		def boot_content = serial_splits[1].replaceAll(/(?m)^[^\[]*/, "");
+		writeFile file:bootlog, text:boot_content;
 	}
-
-	writeFile file:bootlog, text:boot_content;
 }
 
 private checkOnline(String target, Boolean testboot) {
