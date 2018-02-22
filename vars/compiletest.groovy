@@ -9,13 +9,13 @@ import de.linutronix.cirt.inputcheck;
 private compileJob(Map global, String config, String overlay,
 		   String repo, String branch, String recipients) {
 	/* fileExists is a relative query! */
-	configbootprop = "compile/env/${config.replaceAll('/','_')}_${overlay}.properties";
-	boot = fileExists "${configbootprop}";
+	def configbootprop = "compile/env/${config.replaceAll('/','_')}_${overlay}.properties";
+	def boot = fileExists "${configbootprop}";
 
 	if (boot) {
 		String[] boottestprops = [configbootprop];
 		String[] boottests;
-		h = new helper();
+		def h = new helper();
 
 		h.add2environment(boottestprops);
 		try {
@@ -98,7 +98,12 @@ def call(Map global) {
 			deleteDir();
 			unstash(global.STASH_PRODENV);
 			String[] properties = ["environment.properties"];
-			h = new helper();
+			def h = new helper();
+			def configs = "";
+			def overlays = "";
+			def gitrepo = "";
+			def gitcheckout = "";
+			def recipients = "";
 
 			h.add2environment(properties);
 			/*
@@ -107,7 +112,7 @@ def call(Map global) {
 			 * environment verification
 			 */
 			try {
-				environment = h.getEnv();
+				def environment = h.getEnv();
 				configs = environment['CONFIGS'].split();
 				overlays = environment['OVERLAYS'].split();
 				gitrepo = environment['GITREPO'];
