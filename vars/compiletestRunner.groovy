@@ -14,10 +14,10 @@ private runner(Map global, String repo, String branch,
 	println("Repository ${repo} ${branch}");
 	println("Compile Job ${config} ${overlay}");
 
-	resultdir = "compile";
-	builddir = "build";
+	def resultdir = "compile";
+	def builddir = "build";
 	def linuximage = "${config}/${overlay}".replaceAll('/','_');
-	arch = config.split("/")[0];
+	def arch = config.split("/")[0];
 
 	def result = '';
 
@@ -67,7 +67,7 @@ private runner(Map global, String repo, String branch,
 			sh '''touch .config''';
 		}
 
-		prepconfig = libraryResource('de/linutronix/cirt/compiletest/preparekernel.sh');
+		def prepconfig = libraryResource('de/linutronix/cirt/compiletest/preparekernel.sh');
 		writeFile file:"prepconfig.sh", text:prepconfig;
 		sh ". prepconfig.sh ${config} ${overlay} ${resultdir} ${builddir} ${env.BUILD_NUMBER}";
 
