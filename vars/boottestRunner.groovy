@@ -23,7 +23,7 @@ class CyclictestException extends RuntimeException {
 
 private rebootTarget(String hypervisor, String target, String seriallog, Boolean testboot) {
 	def pidfile = "seriallogpid";
-	def virshoutput = "virshoutput";
+	def off_message = "";
 
 	if (testboot) {
 		off_message = "Reboot to Kernel build (${env.BUILD_TAG})";;
@@ -39,6 +39,8 @@ private rebootTarget(String hypervisor, String target, String seriallog, Boolean
 	 */
 
 	if (testboot) {
+		def virshoutput = "virshoutput";
+
 		/* Start serial console logging on test boot */
 		/* TODO: Cleanup error handling; it is not the best solution */
 		writeFile file: virshoutput, text: '';
@@ -50,7 +52,7 @@ echo $! >'''+""" ${pidfile}"""
 		 * error file was written.
 		 */
 		sleep(time: 5, unit: 'SECONDS');
-		output = readFile(virshoutput).trim()
+		def output = readFile(virshoutput).trim()
 		if (output) {
 			println("Virsh console logging Problem (target properly written and logfile writeable?): " + output);
 			/* TODO: throw exception; IT Problem */
@@ -102,14 +104,14 @@ echo $! >'''+""" ${pidfile}"""
 }
 
 private writeBootlog(String seriallog, String bootlog) {
-	kexec_delimiter = "--- CI-RT Booting Testkernel Kexec ---";
+	def kexec_delimiter = "--- CI-RT Booting Testkernel Kexec ---";
 
 	/* ensure seriallog is synced before reading */
 	sh "sync";
 
 	/* extract kexec bootlog of serial log*/
-	serial_content = readFile(seriallog);
-	serial_splits = serial_content.split(kexec_delimiter);
+	def serial_content = readFile(seriallog);
+	def serial_splits = serial_content.split(kexec_delimiter);
 
 	/* error, if kexec_delimiter do not occur, or occurs more than one time */
 	def cnt = serial_splits.size() - 1;
@@ -125,6 +127,7 @@ private writeBootlog(String seriallog, String bootlog) {
 
 private checkOnline(String target, Boolean testboot) {
 	def versionfile = "kversion";
+	def on_message = "";
 
 	if (testboot) {
 		on_message = "In test kernel of Kernel build (${env.BUILD_TAG})";
@@ -151,7 +154,7 @@ private checkOnline(String target, Boolean testboot) {
 
 	/* Test for the proper kernel version */
 	sh 'echo $(ssh '+target+' uname -r | sed \"s/.*-rt[0-9]\\+-\\([0-9]\\+\\).*$/\\1/\") > '+versionfile;
-	version = readFile(versionfile).trim();
+	def version = readFile(versionfile).trim();
 
 	if (testboot && version != env.BUILD_NUMBER) {
 		println("The booted kernel version \"${version}\" on target ${target} differs from version under test.");
@@ -164,18 +167,22 @@ private checkOnline(String target, Boolean testboot) {
 }
 
 private runner(Map global, helper helper, String boottest, String boottestdir, String resultdir, String recipients) {
-	target = helper.getEnv("TARGET");
+	def target = helper.getEnv("TARGET");
 
-	hypervisor = libvirt.getURI(target);
+	def hypervisor = libvirt.getURI(target);
 	println("URI = ${hypervisor}");
+
+	def config = helper.getEnv("CONFIG");
+	def overlay = helper.getEnv("OVERLAY");
+	def kernel = "${config}/${overlay}";
 
 	dir(boottestdir) {
 		deleteDir();
 		lock(target) {
-			cmdlinefile = "${resultdir}/cmdline";
-			seriallog_default = "${resultdir}/serialboot-default.log"
-			seriallog = "${resultdir}/serialboot.log";
-			bootlog = "${resultdir}/boot.log";
+			def cmdlinefile = "${resultdir}/cmdline";
+			def seriallog_default = "${resultdir}/serialboot-default.log";
+			def seriallog = "${resultdir}/serialboot.log";
+			def bootlog = "${resultdir}/boot.log";
 
 			/*
 			 * Create result directory and add cmdlinefile
@@ -204,7 +211,7 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 				/* write cmdline to file */
 				sh "echo \$(ssh ${target} cat /proc/cmdline) > ${cmdlinefile}";
 
-				cyclictests = helper.getEnv("CYCLICTESTS").split();
+				def cyclictests = helper.getEnv("CYCLICTESTS").split();
 				if (cyclictests) {
 					def cyclicresult = cyclictest(global, target, cyclictests,
 								      recipients);
@@ -223,7 +230,7 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 }
 
 private failnotify(Map global, String repo, String branch, String config,
-		   String overlay, String resultdir, String recipients)
+		   String overlay, String resultdir, String recipients, String target)
 {
 	def results = "results/${config}/${overlay}";
 
@@ -256,7 +263,14 @@ private failnotify(Map global, String repo, String branch, String config,
 def call(Map global, String boottest, String recipients) {
 	def failed = false;
 	def cyclictestFailed = false;
-	h = new helper();
+	def boottestdir = "";
+	def resultdir = "boottest";
+	def repo = "";
+	def branch = "";
+	def config = "";
+	def overlay = "";
+	def target = "";
+	def h = new helper();
 	try {
 		inputcheck.check(global);
 		dir("boottestRunner") {
@@ -277,11 +291,10 @@ def call(Map global, String boottest, String recipients) {
 			branch = h.getEnv("BRANCH");
 			config = h.getEnv("CONFIG");
 			overlay = h.getEnv("OVERLAY");
-			kernel = "${config}/${overlay}";
+			def kernel = "${config}/${overlay}";
 
 			/* Last subdirectory "boottest" for results is created by scripts */
 			boottestdir = "results/${kernel}/${target}";
-			resultdir = "boottest";
 
 			runner(global, h, boottest, boottestdir, resultdir,
 			      recipients);
@@ -315,7 +328,7 @@ def call(Map global, String boottest, String recipients) {
 						 pattern: "${resultdir}/boot.log"]],
 			 unHealthy: '');
 
-		script_content = libraryResource('de/linutronix/cirt/boottest/boottest2xml.py');
+		def script_content = libraryResource('de/linutronix/cirt/boottest/boottest2xml.py');
 		writeFile file:"boottest2xml", text:script_content;
 		if (failed) {
 			sh("python3 boottest2xml ${boottest} ${boottestdir} failure")
@@ -336,7 +349,7 @@ def call(Map global, String boottest, String recipients) {
 		}
 
 		failnotify(global, repo, branch, config, overlay, resultdir,
-			   recipients);
+			   recipients, target);
 	}
 }
 
