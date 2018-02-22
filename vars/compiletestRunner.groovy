@@ -69,6 +69,7 @@ private runner(Map global, String repo, String branch,
 
 		def prepconfig = libraryResource('de/linutronix/cirt/compiletest/preparekernel.sh');
 		writeFile file:"prepconfig.sh", text:prepconfig;
+		prepconfig = null;
 		sh ". prepconfig.sh ${config} ${overlay} ${resultdir} ${builddir} ${env.BUILD_NUMBER}";
 
 		/*
@@ -80,6 +81,7 @@ private runner(Map global, String repo, String branch,
 		def exports = readFile ".env/compile/env/${arch}.properties";
 		exports = exports.replaceAll(/(?m)^\s*\n/, "");
 		exports = exports.replaceAll(/(?m)^/, "export ");
+		arch = null;
 
 		def script_content = """#!/bin/bash -x
 
@@ -140,12 +142,15 @@ fi
 ''';
 
 		writeFile file:"${resultdir}/compile-script.sh", text:script_content;
+		exports = null;
+		script_content = null;
 		result = shunit("compile", "${config}/${overlay}",
 				"bash ${resultdir}/compile-script.sh");
 		sh("mv pyjutest.xml ${resultdir}/");
 		stash(name: linuximage,
 		      includes: "${resultdir}/linux-image*deb, ${resultdir}/dtbs-${env.BUILD_NUMBER}.tar.xz",
 		      allowEmpty: true);
+		linuximage = null;
 	}
 	archiveArtifacts(artifacts: "${compiledir}/${resultdir}/**",
 			 fingerprint: true);
@@ -215,6 +220,7 @@ def call(Map global, String repo, String branch,
 								[parserName: 'Linux Kernel Makefile Errors',
 								 pattern: "${compiledir}/**/package.log"]],
 					 unHealthy: '');
+				compiledir = null;
 			}
 		}
 
