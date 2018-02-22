@@ -15,7 +15,7 @@ private boottestJob(Map global, String boottest, String recipients) {
 }
 
 private runboottest(Map global, String[] boottests, String recipients) {
-	def stepsForParallel = [:];
+	//def stepsForParallel = [:];
 
 	for (int i = 0; i < boottests.size(); i++) {
 		def boottest = boottests.getAt(i);
