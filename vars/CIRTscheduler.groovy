@@ -38,6 +38,11 @@ def call(body) {
 
 			stage('stash test-description') {
 				steps {
+					/*
+					 * Cleanup Workspace before stash
+					 * (except checked out git repo)
+					 */
+					sh "git clean -dfx";
 					stash("${params.STASH_RAWENV}");
 				}
 			}
