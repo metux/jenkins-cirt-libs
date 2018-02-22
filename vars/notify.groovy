@@ -8,8 +8,8 @@ import java.net.URI
 
 def renderTemplate(String input, Map variables)
 {
-	def engine = new StreamingTemplateEngine()
-	return engine.createTemplate(input).make(variables).toString()
+	def engine = new StreamingTemplateEngine();
+	return engine.createTemplate(input).make(variables).toString();
 }
 
 def call(String to, String subject, String template, Map variables)
@@ -37,7 +37,7 @@ def call(String to, String subject, String templatename, String attachment,
 	println("Email template: ${templatename}");
 
 	variables << currentBuild.getRawBuild().getEnvironment();
-	subject = "${env.BRANCH_NAME} #${env.BUILD_NUMBER} - ${subject}"
+	subject = "${env.BRANCH_NAME} #${env.BUILD_NUMBER} - ${subject}";
 
 	def template = libraryResource("de/linutronix/cirt/email/${templatename}.txt");
 	def body = renderTemplate(template, variables);
@@ -51,6 +51,6 @@ def call(String to, String subject, String templatename, String attachment,
 }
 
 def call(String... params) {
-	println params
+	println params;
 	error("Unknown signature. Abort.");
 }
