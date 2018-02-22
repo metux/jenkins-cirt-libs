@@ -10,7 +10,7 @@ def collectCompiletests(configs, overlays, unstashDir, helper) {
 	def firstRun = true;
 	def lastRun;
 
-	script_content = libraryResource('de/linutronix/cirt/feedDatabase.py');
+	def script_content = libraryResource('de/linutronix/cirt/feedDatabase.py');
 	writeFile file:unstashDir + "/feedDatabase", text:script_content;
 
 	for (int i = 0; i < configs.size(); i++) {
@@ -133,7 +133,7 @@ def call(Map global) {
 
 			h.add2environment(properties);
 
-			def unstashDir = "db_unstash"
+			def unstashDir = "db_unstash";
 			def configs = h.getEnv('CONFIGS').split();
 			def overlays = h.getEnv('OVERLAYS').split();
 
