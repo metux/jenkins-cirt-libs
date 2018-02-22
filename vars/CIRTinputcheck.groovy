@@ -24,6 +24,6 @@ def call(Map global) {
 }
 
 def call(String... params) {
-	println params
+	println params;
 	error("Unknown signature. Abort.");
 }
