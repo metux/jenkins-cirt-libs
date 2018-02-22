@@ -13,7 +13,11 @@ private compileJob(Map global, String config, String overlay,
 	def boot = fileExists "${configbootprop}";
 
 	if (boot) {
+		boot = null;
+
 		String[] boottestprops = [configbootprop];
+		configbootprop = null;
+
 		String[] boottests;
 		def h = new helper();
 
@@ -21,6 +25,7 @@ private compileJob(Map global, String config, String overlay,
 		try {
 			h.showEnv();
 			boottests = h.getEnv("BOOTTESTS").split();
+			h = null;
 		} catch (java.lang.NullPointerException e) {
 			boottests = [];
 		}
@@ -51,6 +56,8 @@ private compileJob(Map global, String config, String overlay,
 					} else {
 						println ("Boottest skipped due to previous failure");
 					}
+					compileresult = null;
+					boottests = null;
 				}
 			}
 		}
@@ -85,6 +92,7 @@ private compile(Map global, String[] configs, String[] overlays,
 					   gitrepo,
 					   gitcheckout,
 					   recipients);
+			jobName = null;
 		}
 	}
 
@@ -118,6 +126,9 @@ def call(Map global) {
 				gitrepo = environment['GITREPO'];
 				gitcheckout = environment['GIT_CHECKOUT'];
 				recipients = environment['RECIPIENTS'].trim();
+
+				environment = null;
+				h = null;
 			}
 			/* Catches not set environment Parameters */
 			catch (java.lang.NullPointerException e) {
