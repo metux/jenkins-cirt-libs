@@ -5,7 +5,7 @@
 
 def call(String filename) {
 	try {
-		result = junit(filename)
+		def result = junit(filename)
 
 		if (result.failCount >= 1) {
 			return 'UNSTABLE';
