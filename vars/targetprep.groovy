@@ -64,6 +64,6 @@ def call(Map global, String target, String kernel) {
 }
 
 def call(String... params) {
-	println params
+	println params;
 	error("Unknown signature. Abort.");
 }
