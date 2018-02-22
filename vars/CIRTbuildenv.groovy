@@ -106,11 +106,10 @@ ${publicrepo}
 }
 
 private String buildGlobalEnv(String commit) {
-	try {
-		findFiles(glob: '**/.properties')
+	/* findFiles() throws an exception, when directory is empty */
+	def filelist = findFiles(glob: '**/*.properties');
+	if (filelist) {
 		error("found .properties files in testdescription. CIRTbuildenv failed.");
-	} catch(Exception ex) {
-		println("clean workspace.");
 	}
 
 	def globalenv = readCleanFile("env/global");
