@@ -9,29 +9,29 @@ private runner(Map global, String target, String cyclictest) {
 
 	unstash(global.STASH_PRODENV);
 
-	h = new helper();
+	def h = new helper();
 	String[] properties = ["environment.properties",
 			       "boot/${target}.properties",
 			       "${cyclictest}.properties"];
 
 	h.add2environment(properties);
 
-	loadgen = h.getEnv("LOADGEN");
+	def loadgen = h.getEnv("LOADGEN");
 	loadgen?.trim();
-	interval = h.getEnv("INTERVAL");
-	limit = h.getEnv("LIMIT");
-	duration = h.getEnv("DURATION");
+	def interval = h.getEnv("INTERVAL");
+	def limit = h.getEnv("LIMIT");
+	def duration = h.getEnv("DURATION");
 
 	println("cyclictest-runner: ${target} ${cyclictest} ${interval} ${limit}\n${loadgen}");
 
-	config = h.getEnv("CONFIG");
-	overlay = h.getEnv("OVERLAY");
-	kernel = "${config}/${overlay}";
-	cyclictestdir = "results/${kernel}/${target}/${cyclictest}";
+	def config = h.getEnv("CONFIG");
+	def overlay = h.getEnv("OVERLAY");
+	def kernel = "${config}/${overlay}";
+	def cyclictestdir = "results/${kernel}/${target}/${cyclictest}";
 
 	dir(cyclictestdir) {
 		deleteDir();
-		content = """#! /bin/bash
+		def content = """#! /bin/bash
 
 # Exit bash script on error:
 set -e
