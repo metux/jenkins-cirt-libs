@@ -15,6 +15,7 @@ private runner(Map global, String target, String cyclictest) {
 			       "${cyclictest}.properties"];
 
 	h.add2environment(properties);
+	properties = null;
 
 	def loadgen = h.getEnv("LOADGEN");
 	loadgen?.trim();
@@ -26,8 +27,10 @@ private runner(Map global, String target, String cyclictest) {
 
 	def config = h.getEnv("CONFIG");
 	def overlay = h.getEnv("OVERLAY");
+	h = null;
 	def kernel = "${config}/${overlay}";
 	def cyclictestdir = "results/${kernel}/${target}/${cyclictest}";
+	kernel = null
 
 	dir(cyclictestdir) {
 		deleteDir();
@@ -42,6 +45,7 @@ ${loadgen ?: 'true'} &
 sudo cyclictest -q -m -Sp99 -D${duration} -i${interval} -h${limit} -b${limit} --notrace 2> >(tee histogram.log >&2) | tee histogram.dat
 """;
 		writeFile file:"histogram.sh", text:content;
+		content = null;
 		sh ". histogram.sh";
 	}
 
