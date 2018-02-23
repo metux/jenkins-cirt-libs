@@ -19,6 +19,7 @@ from os import listdir
 import time
 from datetime import datetime
 import argparse
+from glob import glob
 
 
 Base = declarative_base()
@@ -532,16 +533,15 @@ for boottest in boottests:
             )
 
         if (junit_res["result"] == "pass"):
-            cyclictests = listdir(
-                join(result_path, boottest, "cyclictest", boottest)
-                )
+            cyclictests = []
+            base_path = join(result_path, boottest, "cyclictest")
+            for file in glob(base_path+"/**/histogram.sh", recursive=True):
+                cyclictests.append(file.rsplit("/", 1)[0])
         else:
             all_tests_passed = False
             cyclictests = []
 
-        for cyclic in cyclictests:
-            cyclic_path = join(result_path, boottest, "cyclictest",
-                               boottest, cyclic)
+        for cyclic_path in cyclictests:
             junit_res = parse_junit(join(cyclic_path, "pyjutest.xml"))
             with open(join(cyclic_path, "histogram.sh"), 'r') as fd:
                 cyclic_script = fd.read()
