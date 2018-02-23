@@ -503,6 +503,12 @@ if first_run == "first_run":
     db.submit_cirtbranch(
         args.git_branch, args.git_commit, build_id, scheduler_id, entry_owner
         )
+    with open("scheduler_id", 'w') as fd:
+        fd.write(str(scheduler_id))
+else:
+    with open("scheduler_id", 'r') as fd:
+        scheduler_id = int(fd.read())
+
 
 junit_res = parse_junit(join(result_path, "compile", "pyjutest.xml"))
 with open(join(result_path, "compile", "compile-script.sh"), 'r') as fd:
