@@ -85,24 +85,27 @@ def collectBoottests(config, overlay, helper) {
 		def boottests = helper.getEnv("BOOTTESTS").split();
 		for (int k = 0; k < boottests.size(); k++) {
 			boottest = boottests.getAt(k)
+			try {
+				unstash(boottest.replaceAll('/','_'));
+			} catch (AbortException ex) {
+				/* catch non existing stash */
+				println("Feeddatabase Info only: "+ex.toString());
+				println("Feeddatabase Info only: "+ex.getMessage());
+				continue;
+			}
+			properties = ["../${boottest}.properties"];
+			helper.add2environment(properties);
+
 			kernel = "${config}/${overlay}";
-			collectCyclictests(boottest, kernel, helper);
+			collectCyclictests(kernel, helper);
 		}
 	}
 }
 
-def collectCyclictests(boottest, kernel, helper) {
+def collectCyclictests(kernel, helper) {
 	def cyclictest;
 	def cyclictestdir;
-	try {
-		unstash(boottest.replaceAll('/','_'));
-	} catch (AbortException ex) {
-		/* catch non existing stash */
-		println("Feeddatabase Info only: "+ex.toString());
-		println("Feeddatabase Info only: "+ex.getMessage());
-	}
-	String[] properties = ["../${boottest}.properties"];
-	helper.add2environment(properties);
+
 	def target = helper.getEnv('TARGET');
 	def cyclictests = helper.getEnv("CYCLICTESTS").split();
 	for (int l = 0; l < cyclictests.size(); l++) {
