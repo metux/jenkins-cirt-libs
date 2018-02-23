@@ -21,13 +21,13 @@ def collectCompiletests(configs, overlays, unstashDir, helper) {
 			dir(unstashDir) {
 				collectBoottests(compiledir, config, overlay, helper);
 				lastRun = (i == configs.size() - 1 && j == overlays.size() - 1);
-				runPythonScript(firstRun, lastRun, unstashDir, compiledir, helper);
+				runPythonScript(firstRun, lastRun, unstashDir, compiledir, helper, config, overlay);
 			}
 		}
 	}
 }
 
-def runPythonScript(firstRun, lastRun, unstashDir, compiledir, helper) {
+def runPythonScript(firstRun, lastRun, unstashDir, compiledir, helper, config, overlay) {
 	def pFirstRun;
 	def pLastRun;
 	if (firstRun) {
@@ -44,8 +44,8 @@ def runPythonScript(firstRun, lastRun, unstashDir, compiledir, helper) {
 	sh("python3 feedDatabase feedDatabase/${unstashDir}/${compiledir}\
 		--buildnumber ${env.BUILD_NUMBER}\
 		--workspace ${env.WORKSPACE}\
-		--overlay ${helper.getEnv('OVERLAY')}\
-		--config ${helper.getEnv('CONFIG')}\
+		--overlay ${overlay}\
+		--config ${config}\
 		--git_branch ${env.GIT_BRANCH}\
 		--git_commit ${env.GIT_COMMIT}\
 		--gitrepo ${helper.getEnv('GITREPO')}\
