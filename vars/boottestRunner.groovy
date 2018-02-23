@@ -104,6 +104,9 @@ echo $! >'''+""" ${pidfile}"""
 private writeBootlog(String seriallog, String bootlog) {
 	kexec_delimiter = "--- CI-RT Booting Testkernel Kexec ---";
 
+	/* ensure seriallog is synced before reading */
+	sh "sync";
+
 	/* extract kexec bootlog of serial log*/
 	serial_content = readFile(seriallog);
 	serial_splits = serial_content.split(kexec_delimiter);
