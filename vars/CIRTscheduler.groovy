@@ -101,7 +101,6 @@ def call(body) {
 							}
 						}
 					}
-					echo "send email"
 				}
 			}
 		}
