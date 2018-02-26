@@ -18,7 +18,7 @@ def call(Map global, String target, String kernel) {
 				 * Check if there are more or less than a single
 				 * debian package in stash
 				 */
-				debfile = findFiles(glob: "compile/*.deb");
+				def debfile = findFiles(glob: "compile/*.deb");
 				if (debfile.size() != 1) {
 					error message:"Not only a single deb file in stash. Abort";
 				}
@@ -47,7 +47,7 @@ def call(Map global, String target, String kernel) {
 				 * the default (and properly working kernel
 				 * version is booted).
 				 */
-				debname = "${debfile[0]}".replaceAll(/.*\//, '').replaceAll(/_.*/, '');
+				def debname = "${debfile[0]}".replaceAll(/.*\//, '').replaceAll(/_.*/, '');
 				sh "sudo dpkg --purge ${debname}";
 
 				/* Unpack devicetrees */
