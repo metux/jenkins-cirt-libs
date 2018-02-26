@@ -444,7 +444,7 @@ class CirtDB():
             cirtscheduler = s.query(Cirtscheduler).\
                 filter(Cirtscheduler.cirtscheduler_id == scheduler_id).one()
             if not first_run == "first_run":
-                prev_pass = cirtscheduler["pass"]
+                prev_pass = cirtscheduler.pass_
                 passed = passed and prev_pass
 
             cirtscheduler.pass_ = passed
