@@ -17,7 +17,7 @@ def call(String classname, String name, String cmd) {
 		writeFile(file:"pyjutest.sh", text:cmd);
 		sh "chmod a+x ./pyjutest.sh"
 
-		testcmd = "pyjutest";
+		def testcmd = "pyjutest";
 		if (classname) {
 			testcmd += " --class \"${classname}\"";
 		}
