@@ -25,11 +25,11 @@ def call(String classname, String name, String cmd) {
 			testcmd += " --name \"${name}\"";
 		}
 		testcmd += " ./pyjutest.sh";
-		logger.debugMsg("--- Start Test ---");
-		logger.debugMsg(cmd);
-		logger.debugMsg("run: " + testcmd);
+		logger.debugMsg("[${name}] --- Start Test ---");
+		logger.debugMsg("[${name}] "+cmd);
+		logger.debugMsg("[${name}] run: " + testcmd);
 		sh(testcmd);
-		logger.debugMsg("--- End Test ---");
+		logger.debugMsg("[${name}] --- End Test ---");
 		return junit_result("pyjutest.xml");
 	}  catch(Exception ex) {
 		println("shunit failed:");
