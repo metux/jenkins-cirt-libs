@@ -35,6 +35,7 @@ def collectCompiletests(configs, overlays, unstashDir, helper) {
 				collectBoottests(config, overlay, helper);
 				lastRun = (i == configs.size() - 1 && j == overlays.size() - 1);
 				runPythonScript(firstRun, lastRun, unstashDir, compiledir, helper, config, overlay);
+				firstRun = false
 			}
 		}
 	}
@@ -45,7 +46,6 @@ def runPythonScript(firstRun, lastRun, unstashDir, compiledir, helper, config, o
 	def pLastRun;
 	if (firstRun) {
 		pFirstRun = "first_run";
-		firstRun = false
 	} else {
 		pFirstRun = "false";
 	}
