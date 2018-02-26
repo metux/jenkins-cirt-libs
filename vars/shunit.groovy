@@ -7,15 +7,15 @@ import de.linutronix.lib4lib.logger;
 
 def call(String classname, String name, String cmd) {
 	try {
-		Map enspkg = [:]
+		Map enspkg = [:];
 		enspkg.ensure_pkgs = [[name: 'pyjutest', version: '1.6+stretch251']];
 		// TODO skip suite name here and set it in ensureDebPkg
-		enspkg.ensure_repo = "deb http://debian.linutronix.de/tools stretch main"
-		enspkg.ensure_repo_key = "http://debian.linutronix.de/tools/repo.pub"
+		enspkg.ensure_repo = "deb http://debian.linutronix.de/tools stretch main";
+		enspkg.ensure_repo_key = "http://debian.linutronix.de/tools/repo.pub";
 		ensureDebPkg(enspkg);
 
 		writeFile(file:"pyjutest.sh", text:cmd);
-		sh "chmod a+x ./pyjutest.sh"
+		sh "chmod a+x ./pyjutest.sh";
 
 		def testcmd = "pyjutest";
 		if (classname) {
@@ -49,6 +49,6 @@ def call(String cmd) {
 }
 
 def call(String... params) {
-	println params
+	println params;
 	error("Unknown signature. Abort.");
 }
