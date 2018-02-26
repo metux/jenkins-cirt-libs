@@ -19,7 +19,20 @@ def collectCompiletests(configs, overlays, unstashDir, helper) {
 			overlay = overlays.getAt(j);
 			compiledir = "results/${config}/${overlay}";
 			dir(unstashDir) {
-				collectBoottests(compiledir, config, overlay, helper);
+				try {
+					unstash(compiledir.replaceAll('/','_'));
+				} catch (AbortException ex) {
+					/* catch non existing stash */
+					println("Feeddatabase Info only: "+ex.toString());
+					println("Feeddatabase Info only: "+ex.getMessage());
+					continue;
+				}
+
+				String gittagsprop = compiledir + "/compile/gittags.properties";
+				String[] properties = [gittagsprop]
+				helper.add2environment(properties);
+
+				collectBoottests(config, overlay, helper);
 				lastRun = (i == configs.size() - 1 && j == overlays.size() - 1);
 				runPythonScript(firstRun, lastRun, unstashDir, compiledir, helper, config, overlay);
 			}
@@ -58,23 +71,17 @@ def runPythonScript(firstRun, lastRun, unstashDir, compiledir, helper, config, o
 		--first_run ${pFirstRun} --last_run ${pLastRun}")
 }
 
-def collectBoottests(compiledir, config, overlay, helper) {
+def collectBoottests(config, overlay, helper) {
 	def boottest;
 	def kernel;
-	try {
-		unstash(compiledir.replaceAll('/','_'));
-	} catch (AbortException ex) {
-		/* catch non existing stash */
-		println("Feeddatabase Info only: "+ex.toString());
-		println("Feeddatabase Info only: "+ex.getMessage());
-	}
 
 	String configbootprop = "../compile/env/${config.replaceAll('/','_')}_${overlay}.properties";
-	String gittagsprop = compiledir + "/compile/gittags.properties";
+
 	def boot = fileExists "${configbootprop}";
 	if (boot) {
-		String[] properties = [configbootprop, gittagsprop]
+		String[] properties = [configbootprop]
 		helper.add2environment(properties);
+
 		def boottests = helper.getEnv("BOOTTESTS").split();
 		for (int k = 0; k < boottests.size(); k++) {
 			boottest = boottests.getAt(k)
