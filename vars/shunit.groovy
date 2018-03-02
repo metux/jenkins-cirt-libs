@@ -17,7 +17,11 @@ def call(String classname, String name, String cmd) {
 		writeFile(file:"pyjutest.sh", text:cmd);
 		sh "chmod a+x ./pyjutest.sh";
 
-		def testcmd = "pyjutest";
+		/*
+		 * ensure stdout is unbuffered (-u option);
+		 * see bug: JENKINS-48300
+		 */
+		def testcmd = "python3 -u /usr/bin/pyjutest";
 		if (classname) {
 			testcmd += " --class \"${classname}\"";
 		}
