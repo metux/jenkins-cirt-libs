@@ -24,7 +24,7 @@ def call(body) {
 			string(defaultValue: "${global.STASH_PRODENV ?: 'prodenv'}", description: '', name: 'STASH_PRODENV')
 			string(defaultValue: "${global.STASH_RAWENV ?: 'rawenvironment'}", description: '', name: 'STASH_RAWENV')
 			string(defaultValue: "${global.STASH_COMPILECONF ?: 'compileconf'}", description: '', name: 'STASH_COMPILECONF')
-			string(defaultValue: "${global.GUI_DB_HOSTNAME ?: 'localhost?5432'}", description: 'Hostname of database', name: 'GUI_DB_HOSTNAME')
+			string(defaultValue: "${global.GUI_DB_HOSTNAME ?: 'localhost:5432'}", description: 'Hostname of database', name: 'GUI_DB_HOSTNAME')
 			string(defaultValue: "${global.GUI_COMMIT ?: ''}", description: '', name: 'GUI_COMMIT')
 			string(defaultValue: "${global.GUI_FAILURE_NOTIFICATION}", description: 'Notify in case of test system failure', name: 'GUI_FAILURE_NOTIFICATION')
 		}
