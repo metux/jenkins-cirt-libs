@@ -17,6 +17,11 @@ def call(String to, String subject, String template, Map variables)
 	call(to, subject, template, null, true, variables);
 }
 
+def call(String to, String subject, String template, Boolean log)
+{
+	call(to, subject, template, null, log, [:]);
+}
+
 def call(String to, String subject)
 {
 	call(to, subject, "default", null, true, [:]);

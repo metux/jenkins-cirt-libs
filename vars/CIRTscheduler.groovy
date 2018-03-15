@@ -64,6 +64,15 @@ def call(body) {
 				}
 			}
 
+			stage('notify test start') {
+				steps {
+					notify("${recipients}",
+					       "Start",
+					       "start",
+					       false);
+				}
+			}
+
 			stage('compile') {
 				steps {
 					script {
