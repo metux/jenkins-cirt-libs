@@ -148,6 +148,7 @@ fi
 				"bash ${resultdir}/compile-script.sh");
 		sh("mv pyjutest.xml ${resultdir}/");
 		stash(name: linuximage,
+		      excludes: "**/*-dbg_*",
 		      includes: "${resultdir}/linux-image*deb, ${resultdir}/dtbs-${env.BUILD_NUMBER}.tar.xz",
 		      allowEmpty: true);
 		linuximage = null;
