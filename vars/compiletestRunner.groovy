@@ -47,7 +47,7 @@ private runner(Map global, String repo, String branch,
 
 		/* Unstash and apply test-description patch queue */
 		unstash(global.STASH_PATCHES);
-		sh("[ -d patches ] && quilt push -a");
+		sh("if [ -d patches ] ; then quilt push -a ; fi");
 
 		/* Extract gittag information for db entry */
 		dir(resultdir) {
