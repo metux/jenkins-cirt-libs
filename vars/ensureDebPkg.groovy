@@ -1,4 +1,6 @@
 #!/usr/bin/env groovy
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2018 Linutronix GmbH
 /*
  * lib4lib - ensure a Debian packages are installed
  */

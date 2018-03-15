@@ -18,6 +18,9 @@ For the sake of completeness, please refer to the
 https://ci-rt.linutronix.de/RT-Test/about.jsp[CI-RT explanation] for
 detailed information of the hardware setup.
 
+If you like to develop code for CI-RT, please notice the content of
+the sections "License rules" and "Copyright notice".
+
 Setup of Jenkins master instance
 --------------------------------
 
@@ -209,3 +212,35 @@ image::images/permanent-agent-details.png[]
 image::images/iommu-details.png[]
 
 
+License rules
+-------------
+
+The CI-RT Jenkins library is provided under the terms of the MIT
+license as provided in the LICENSE file.
+
+Instead of adding MIT boilerplates to the individual files, CI-RT uses
+SPDX license identifiers, which are machine parseable and considered
+legaly equivalent.
+
+The SPDX license identifier in CI-RT Jenkins lib shall be added at the
+first possible line in a file which can contain a comment. This is
+normally the first line except for scripts. Scripts require the
+'#!PATH_TO_INTERPRETER' tag in the first line; place the SPDX
+identifier into the second line.
+
+The SPDX license identifier is added in form of a comment.  The
+comment style depends on the file type::
+
+groovy scripts:		// SPDX-License-Identifier: <SPDX License Expression>
+bash/python scripts:	# SPDX-License-Identifier: <SPDX License Expression>
+txt templates:		<%-- SPDX-License-Identifier: <SPDX License Expression> --%>
+
+
+Copyright notice
+----------------
+
+Copyright notices shall be placed right below the SPDX identifier with
+the same comment format as the SPDX identifier. The canonical form for
+a copyright notice is:
+
+Copyright (c) <year> <copyright holders>

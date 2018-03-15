@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2018 Linutronix GmbH
 
 from junit_xml import TestSuite, TestCase
 import sys

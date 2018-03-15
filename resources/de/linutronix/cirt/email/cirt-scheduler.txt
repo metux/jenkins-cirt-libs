@@ -1,3 +1,5 @@
+<%-- SPDX-License-Identifier: MIT --%>
+<%-- Copyright (c) 2018 Linutronix GmbH --%>
 cirt-scheduler - Build #${BUILD_NUMBER} - ${status}!
 
 CI-RT test: ${BRANCH_NAME} #${BUILD_NUMBER}

@@ -1,4 +1,6 @@
 #!/bin/bash
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2018 Linutronix GmbH
 
 # Prepare Kernel Config
 # abort skript on error

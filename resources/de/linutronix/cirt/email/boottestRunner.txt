@@ -1,3 +1,5 @@
+<%-- SPDX-License-Identifier: MIT --%>
+<%-- Copyright (c) 2018 Linutronix GmbH --%>
 boottest-runner - Build #${BUILD_NUMBER} - failed!
 
 CI-RT test: ${BRANCH_NAME} #${BUILD_NUMBER}

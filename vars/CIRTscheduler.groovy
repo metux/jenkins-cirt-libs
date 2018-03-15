@@ -1,6 +1,9 @@
 #!/usr/bin/env groovy
+// SPDX-License-Identifier: MIT
 /*
  * CI-RT scheduler job
+ *
+ * Copyright (c) 2017,2018 Linutronix GmbH
  */
 
 import de.linutronix.cirt.inputcheck;

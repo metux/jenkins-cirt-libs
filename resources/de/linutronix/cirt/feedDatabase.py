@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2018 Linutronix GmbH
 
 from sqlalchemy import create_engine, event
 from sqlalchemy.schema import Table

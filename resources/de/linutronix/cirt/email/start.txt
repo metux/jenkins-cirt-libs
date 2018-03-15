@@ -1,3 +1,5 @@
+<%-- SPDX-License-Identifier: MIT --%>
+<%-- Copyright (c) 2018 Linutronix GmbH --%>
 CI-RT Testjob ${BRANCH_NAME} #${BUILD_NUMBER} starts
 
 It is based on test-description branch ${BRANCH_NAME}
