@@ -1,5 +1,6 @@
-/* -*- mode: groovy; -*-
- * CI-RT cyclictest runner job
+#!/usr/bin/env groovy
+/*
+ * CI-RT scheduler job
  */
 
 import de.linutronix.cirt.inputcheck;

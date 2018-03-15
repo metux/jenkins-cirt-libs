@@ -1,4 +1,7 @@
-#!/usr/bin/groovy
+#!/usr/bin/env groovy
+/*
+ * CI-RT job to feed results into database
+ */
 
 import de.linutronix.cirt.helper;
 import hudson.AbortException

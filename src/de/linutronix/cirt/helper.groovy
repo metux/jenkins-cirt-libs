@@ -1,5 +1,6 @@
-/* -*- mode: groovy; -*-
- * CI-RT library test
+#!/usr/bin/env groovy
+/*
+ * CI-RT environment helper
  */
 
 package de.linutronix.cirt;

@@ -1,6 +1,6 @@
-#!/usr/bin/groovy
-/* -*- mode: groovy; -*-
- * CI-RT library kernel build test
+#!/usr/bin/env groovy
+/*
+ * CI-RT combine sh Jenkins command with pyjutest
  */
 
 import de.linutronix.lib4lib.logger;

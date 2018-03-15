@@ -1,5 +1,5 @@
-#!/usr/bin/groovy
-/* -*- mode: groovy; -*-
+#!/usr/bin/env groovy
+/*
  * lib4lib - ensure a Debian packages are installed
  */
 

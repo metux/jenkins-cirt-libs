@@ -1,6 +1,6 @@
-#!/usr/bin/groovy
-/* -*- mode: groovy; -*-
- * notification helper
+#!/usr/bin/env groovy
+/*
+ * CI-RT notification helper
  */
 
 import groovy.text.StreamingTemplateEngine

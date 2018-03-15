@@ -1,5 +1,5 @@
-#!/usr/bin/groovy
-/* -*- mode: groovy; -*-
+#!/usr/bin/env groovy
+/*
  * CI-RT library junit helper
  */
 

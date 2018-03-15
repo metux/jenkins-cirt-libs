@@ -1,4 +1,5 @@
-/* -*- mode: groovy; -*-
+#!/usr/bin/env groovy
+/*
  * CI-RT common input checks
  */
 

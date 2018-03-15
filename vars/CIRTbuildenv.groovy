@@ -1,6 +1,6 @@
-#!/usr/bin/groovy
-/* -*- mode: groovy; -*-
- * CI-RT library kernel build test
+#!/usr/bin/env groovy
+/*
+ * CI-RT library build environment with test-description
  */
 
 import de.linutronix.cirt.inputcheck;

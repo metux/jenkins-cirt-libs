@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 
 # Prepare Kernel Config
 # abort skript on error

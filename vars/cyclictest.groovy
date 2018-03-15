@@ -1,6 +1,6 @@
-#!/usr/bin/groovy
-/* -*- mode: groovy; -*-
- * CI-RT library cyclictest handling
+#!/usr/bin/env groovy
+/*
+ * CI-RT cyclictest
  */
 
 import de.linutronix.cirt.inputcheck;

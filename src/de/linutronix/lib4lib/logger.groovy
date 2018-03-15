@@ -1,6 +1,6 @@
-#!/usr/bin/groovy
-/* -*- mode: groovy; -*-
- * helpers to ensure a debian package is installed in the correct version
+#!/usr/bin/env groovy
+/*
+ * CI-RT Jenkins logger extension
  */
 
 package de.linutronix.lib4lib;
