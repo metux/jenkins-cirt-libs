@@ -37,6 +37,9 @@ def call(String to, String subject, String templatename, String attachment,
 	println("Email template: ${templatename}");
 
 	variables << currentBuild.getRawBuild().getEnvironment();
+	variables['GIT_URL'] = env.GIT_URL;
+	variables['GIT_COMMIT'] = env.GIT_COMMIT;
+
 	subject = "${env.BRANCH_NAME} #${env.BUILD_NUMBER} - ${subject}";
 
 	def template = libraryResource("de/linutronix/cirt/email/${templatename}.txt");
