@@ -48,6 +48,8 @@ def call(String to, String subject, String templatename, String attachment,
 	subject = "${env.BRANCH_NAME} #${env.BUILD_NUMBER} - ${subject}";
 
 	def template = libraryResource("de/linutronix/cirt/email/${templatename}.txt");
+	/* remove JSP-style comments */
+	template = template.replaceAll(/(?s)<%--.*--%>/, "");
 	def body = renderTemplate(template, variables);
 
 	URI uri = new URI(Hudson.instance.getRootUrl());
