@@ -99,9 +99,10 @@ CONFIG_OVERLAY=${linuximage}
 BUILD_DIR=${builddir}
 RESULT_DIR=${resultdir}
 
-# TODO: BUILDONLY should depend on BUILD_TARGET; move this logic in environment handling;
+# TODO: COMPILE_ONLY should depend on BUILD_TARGET; move this logic in environment handling;
 #	possible solution: per config environment file, which overwrites arch settings?
-BUILDONLY=${fileExists(".env/compile/env/"+linuximage+".properties") == "true" ? 1 : 0}
+# only if *.properties file exists, boottest is executed for kernel config
+COMPILE_ONLY=${fileExists(".env/compile/env/"+linuximage+".properties") ? 0 : 1}
 """+'''
 
 BUILDARGS="-j ${MAKE_PARALLEL}  O=${BUILD_DIR} LOCALVERSION=-${LOCALVERSION}"
@@ -130,7 +131,7 @@ fi
 
 # If config will be booted later, debian package and devicetrees
 # need to be created and stored in $RESULT_DIR
-if [ $BUILDONLY -eq 0 ]
+if [ $COMPILE_ONLY -eq 0 ]
 then
 	echo "compiletest-runner #${LOCALVERSION} $CONFIG_OVERLAY ${BUILD_TARGET:bindeb-pkg} (stderr)" > $LOGFILE_PKG
 	make $BUILDARGS ${BUILD_TARGET:-bindeb-pkg} 2> >(tee -a $LOGFILE_PKG >&2)
