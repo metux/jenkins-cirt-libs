@@ -30,7 +30,7 @@ oscript=$RESULT_DIR/overlayscript
 handle_overlay() {
 	if [ ! -f $OVERLAYFILE ]
 	then
-		echo "error: overlay $overlay not found"
+		echo "error: overlay $OVERLAY not found"
 		return 1
 	fi
 
@@ -161,7 +161,7 @@ fi
 
 
 # handle overlay
-if [ x != x"$overlay" ]
+if [ x != x"$OVERLAY" ]
 then
 	handle_overlay
 fi
