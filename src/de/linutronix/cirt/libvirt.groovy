@@ -7,12 +7,6 @@
 
 package de.linutronix.cirt;
 
-/* get libvirt hypervisor URI
- * 1) iterate through slaves to find the target.
- * 2) verify that target is controlled by libvirt
- * 3) get hypervisor URI and return map to set HYPERVISOR in environment
- * throw an AbortException on error
- */
 import jenkins.model.*
 import hudson.model.*
 import hudson.util.*
@@ -20,6 +14,13 @@ import hudson.node_monitors.*
 import hudson.slaves.*
 import hudson.AbortException
 
+/*
+ * get libvirt hypervisor URI
+ * 1) iterate through slaves to find the target.
+ * 2) verify that target is controlled by libvirt
+ * 3) get hypervisor URI and return map to set HYPERVISOR in environment
+ * throw an AbortException on error
+ */
 static String getURI(String target) {
 	def jenkins = Jenkins.instance;
 
