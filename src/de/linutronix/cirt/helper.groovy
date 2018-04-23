@@ -63,3 +63,13 @@ def getVar(String name) {
 
 	return e;
 }
+
+def getVar(String name, String preset) {
+	def e = environment[name];
+
+	if (!e) {
+		return preset;
+	} else {
+		return e;
+	}
+}
