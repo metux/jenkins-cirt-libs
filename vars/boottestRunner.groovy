@@ -328,45 +328,53 @@ def call(Map global, String boottest, String recipients) {
 	}
 
 	dir("boottestRunner") {
-		resultdir = "${boottestdir}/" + resultdir;
+		try {
+			resultdir = "${boottestdir}/" + resultdir;
 
-		/* parse boot.log for warnings */
-		warnings(canComputeNew: false,
-			 canResolveRelativePaths: false,
-			 canRunOnFailed: true,
-			 categoriesPattern: '',
-			 defaultEncoding: '',
-			 excludePattern: '',
-			 healthy: '',
-			 includePattern: '',
-			 messagesPattern: '',
-			 parserConfigurations: [[parserName: 'Linux Kernel Output Parser',
-						 pattern: "${resultdir}/boot.log"]],
-			 unHealthy: '');
+			/* parse boot.log for warnings */
+			warnings(canComputeNew: false,
+				 canResolveRelativePaths: false,
+				 canRunOnFailed: true,
+				 categoriesPattern: '',
+				 defaultEncoding: '',
+				 excludePattern: '',
+				 healthy: '',
+				 includePattern: '',
+				 messagesPattern: '',
+				 parserConfigurations: [[parserName: 'Linux Kernel Output Parser',
+							 pattern: "${resultdir}/boot.log"]],
+				 unHealthy: '');
 
-		def script_content = libraryResource('de/linutronix/cirt/boottest/boottest2xml.py');
-		writeFile file:"boottest2xml", text:script_content;
-		script_content = null;
-		if (failed) {
-			sh("python3 boottest2xml ${boottest} ${boottestdir} failure")
-		} else {
-			sh("python3 boottest2xml ${boottest} ${boottestdir}")
-		}
-		junit("${resultdir}/pyjutest.xml");
+			def script_content = libraryResource('de/linutronix/cirt/boottest/boottest2xml.py');
+			writeFile file:"boottest2xml", text:script_content;
+			script_content = null;
+			if (failed) {
+				sh("python3 boottest2xml ${boottest} ${boottestdir} failure")
+			} else {
+				sh("python3 boottest2xml ${boottest} ${boottestdir}")
+			}
+			junit("${resultdir}/pyjutest.xml");
 
-		archiveArtifacts(artifacts: "${resultdir}/**",
-				 fingerprint: true);
-		stash(name: boottest.replaceAll('/','_'),
-		      includes: "${resultdir}/pyjutest.xml, " +
-		      "${resultdir}/cmdline");
+			archiveArtifacts(artifacts: "${resultdir}/**",
+					 fingerprint: true);
+			stash(name: boottest.replaceAll('/','_'),
+			      includes: "${resultdir}/pyjutest.xml, " +
+			      "${resultdir}/cmdline");
 
-		/* Do not notify on failed cyclictest nor stable test */
-		if (cyclictestFailed || !failed) {
+			/* Do not notify on failed cyclictest nor stable test */
+			if (cyclictestFailed || !failed) {
 			return;
-		}
+			}
 
-		failnotify(global, repo, branch, config, overlay, resultdir,
-			   recipients, target);
+			failnotify(global, repo, branch, config, overlay,
+				   resultdir, recipients, target);
+		} catch(Exception ex) {
+			println("boottest \"${boottest}\" postprocessing failed:");
+			println(ex.toString());
+			println(ex.getMessage());
+			println(ex.getStackTrace());
+			error("boottest \"${boottest}\" postprocessing failed.");
+		}
 	}
 }
 
