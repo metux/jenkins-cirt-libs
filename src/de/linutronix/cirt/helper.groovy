@@ -50,9 +50,21 @@ def getEnv() {
 	return environment;
 }
 
-def getEnv(String name) {
-	return environment[name];
-}
+/*
+ * getEnv() usage in CI-RT (please do not remove):
+ *
+ * The function getEnv(String name) was previously used to get environment
+ * variables in a common fashion. This common behaviour i.e. return null
+ * on nonexisting variables may let to silently ignored tests.
+ * getEnv() is replaced by getVar() in CI-RT.
+ * getVar() came in two fashions without and with preset:
+ * - getVar(String name) should be used if an environment is mandatory in any
+ *   kind, by the testdescription requirements or any computed must set
+ *   environment variable.
+ * - getVar(String name, String preset) should be used for all other
+ *   environment variables. preset should be set to a reasonable value meant
+ *   as documentation also.
+ */
 
 def getVar(String name) {
 	def e = environment[name];
