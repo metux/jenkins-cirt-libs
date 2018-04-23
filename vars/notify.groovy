@@ -8,10 +8,22 @@
 import groovy.text.StreamingTemplateEngine
 import java.net.URI
 
+@NonCPS
 def renderTemplate(String input, Map variables)
 {
+	/* remove JSP-style comments */
+	input = input.replaceAll(/(?s)<%--.*--%>/, "");
+
 	def engine = new StreamingTemplateEngine();
 	return engine.createTemplate(input).make(variables).toString();
+}
+
+@NonCPS
+def prepareSubject(String subject)
+{
+	subject = "${env.BRANCH_NAME} #${env.BUILD_NUMBER} - ${subject}";
+	URI uri = new URI(Hudson.instance.getRootUrl());
+	return "[${uri.getHost().replaceAll(/\..*/, "")}] ${subject}";
 }
 
 def call(String to, String subject, String template, Map variables)
@@ -57,15 +69,9 @@ def call(String to, String subject, String templatename, String attachment,
 		variables['GIT_URL'] = env.GIT_URL;
 		variables['GIT_COMMIT'] = env.GIT_COMMIT;
 
-		subject = "${env.BRANCH_NAME} #${env.BUILD_NUMBER} - ${subject}";
-
 		def template = libraryResource("de/linutronix/cirt/email/${templatename}.txt");
-		/* remove JSP-style comments */
-		template = template.replaceAll(/(?s)<%--.*--%>/, "");
 		def body = renderTemplate(template, variables);
-
-		URI uri = new URI(Hudson.instance.getRootUrl());
-		subject = "[${uri.getHost().replaceAll(/\..*/, "")}] ${subject}";
+		subject = prepareSubject(subject);
 
 		emailext(subject: subject, body: body, attachLog: log,
 			 attachmentsPattern: attachment,
