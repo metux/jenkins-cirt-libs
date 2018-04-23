@@ -21,6 +21,7 @@ import hudson.AbortException
  * 3) get hypervisor URI and return map to set HYPERVISOR in environment
  * throw an AbortException on error
  */
+@NonCPS
 static String getURI(String target) {
 	def jenkins = Jenkins.instance;
 
@@ -38,6 +39,7 @@ static String getURI(String target) {
 	throw new hudson.AbortException("Target ${target} is not available. Abort.");
 }
 
+@NonCPS
 static wait4onlineTimeout(String target, Integer timeout) {
 	def jenkins = Jenkins.instance
 
@@ -64,6 +66,7 @@ static wait4onlineTimeout(String target, Integer timeout) {
 	}
 }
 
+@NonCPS
 static offline(String target, String reason, Boolean fail = true) {
 	def jenkins = Jenkins.instance
 
@@ -83,6 +86,7 @@ static offline(String target, String reason, Boolean fail = true) {
 	}
 }
 
+@NonCPS
 static online(String target, String reason, Boolean fail = true) {
 	def jenkins = Jenkins.instance
 
