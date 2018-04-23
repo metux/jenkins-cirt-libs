@@ -122,14 +122,12 @@ def call(Map global) {
 			 * environment verification
 			 */
 			try {
-				def environment = h.getEnv();
-				configs = environment['CONFIGS'].split();
-				overlays = environment['OVERLAYS'].split();
-				gitrepo = environment['GITREPO'];
-				gitcheckout = environment['GIT_CHECKOUT'];
-				recipients = environment['RECIPIENTS'].trim();
+				configs = h.getEnv('CONFIGS');
+				overlays = h.getEnv('OVERLAYS');
+				gitrepo = h.getEnv('GITREPO');
+				gitcheckout = h.getEnv('GIT_CHECKOUT');
+				recipients = h.getEnv('RECIPIENTS').trim();
 
-				environment = null;
 				h = null;
 			}
 			/* Catches not set environment Parameters */
