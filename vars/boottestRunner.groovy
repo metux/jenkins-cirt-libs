@@ -353,13 +353,14 @@ def call(Map global, String boottest, String recipients) {
 			} else {
 				sh("python3 boottest2xml ${boottest} ${boottestdir}")
 			}
-			junit("${resultdir}/pyjutest.xml");
 
 			archiveArtifacts(artifacts: "${resultdir}/**",
 					 fingerprint: true);
 			stash(name: boottest.replaceAll('/','_'),
 			      includes: "${resultdir}/pyjutest.xml, " +
 			      "${resultdir}/cmdline");
+
+			junit("${resultdir}/pyjutest.xml");
 
 			/* Do not notify on failed cyclictest nor stable test */
 			if (cyclictestFailed || !failed) {
