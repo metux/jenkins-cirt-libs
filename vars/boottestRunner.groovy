@@ -294,6 +294,11 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 				forcedRebootDefault(hypervisor, target, seriallog_default, true);
 				throw ex;
 			} catch (RebootException ex) {
+				failnotify(global,
+					   "boottestRunner - Reboot of \"${target}\" failed",
+					   "boottestReboot", global, repo,
+					   branch, config, overlay, resultdir,
+					   recipients, target);
 				forcedRebootDefault(hypervisor, target, seriallog_default, false);
 			}
 		}
@@ -379,9 +384,25 @@ def call(Map global, String boottest, String recipients) {
 		}
 	} catch (ForcedRebootAndBoottestException ex) {
 		failed = true;
+		if (params.GUI_FAILURE_NOTIFICATION) {
+			failnotify(global,
+				   "Forced reboot of \"${target}\" failed",
+				   "boottestRunner", global, repo, branch,
+				   config, overlay, resultdir,
+				   "${params.GUI_FAILURE_NOTIFICATION}",
+				   target, ["bootexception": true]);
+		}
 	} catch (ForcedRebootException ex) {
 		/* do not fail on dut testkernel reboot failures */
 		failed = false;
+		if (params.GUI_FAILURE_NOTIFICATION) {
+			failnotify(global,
+				   "Forced reboot of \"${target}\" failed",
+				   "boottestRunner", global, repo, branch,
+				   config, overlay, resultdir,
+				   "${params.GUI_FAILURE_NOTIFICATION}",
+				   target, ["bootexception": false]);
+		}
 	} catch (BoottestException ex) {
 		failed = true;
 	} catch (CyclictestException ex) {

@@ -1,0 +1,17 @@
+boottest-runner - Build #${BUILD_NUMBER} - Reboot of "${target}" failed!
+
+This error doesn't mark the boottest as failed!
+
+CI-RT test: ${BRANCH_NAME} #${BUILD_NUMBER}
+${BUILD_URL}
+
+branch : ${branch}
+config : ${config}
+overlay: ${overlay}
+target : ${target}
+
+git infos:
+${repo}
+${gittags}
+
+Check console output for detailed information at ${BUILD_URL}console
