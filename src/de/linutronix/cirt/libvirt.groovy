@@ -58,7 +58,7 @@ static wait4onlineTimeout(String target, Integer timeout) {
 			}
 
 			if (computer.isOffline()) {
-				throw new hudson.AbortException("Target ${computer.name} is offline. Abort: ${computer.getOfflineCauseReason()}")
+				throw new TargetOnOfflineException("Target ${computer.name} is offline. Abort: ${computer.getOfflineCauseReason()}")
 			}
 
 			println "Target ${computer.name} is online"
@@ -75,7 +75,7 @@ static offline(String target, String reason, Boolean fail = true) {
 		if (computer.name == target) {
 			if (computer.isOffline()) {
 				if (fail) {
-					    throw new hudson.AbortException("Target ${computer.name} is offline. Abort.");
+					    throw new TargetOnOfflineException("Target ${computer.name} is offline. Abort.");
 				} else {
 					println("Target ${computer.name} is already offline.");
 				}
@@ -95,7 +95,7 @@ static online(String target, String reason, Boolean fail = true) {
 		if (computer.name == target) {
 			if (computer.isOnline()) {
 				if (fail) {
-					throw new hudson.AbortException("Target ${computer.name} is online. Abort.");
+					throw new TargetOnOfflineException("Target ${computer.name} is online. Abort.");
 				} else {
 					println("Target ${computer.name} is already online.");
 					return;
