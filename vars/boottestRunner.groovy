@@ -248,8 +248,10 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 	}
 }
 
-private failnotify(Map global, String repo, String branch, String config,
-		   String overlay, String resultdir, String recipients, String target)
+private failnotify(Map global, String subject, String template, String repo,
+		   String branch, String config, String overlay,
+		   String resultdir, String recipients, String target,
+		   Map extras)
 {
 	def results = "results/${config}/${overlay}";
 
@@ -268,15 +270,23 @@ private failnotify(Map global, String repo, String branch, String config,
 		gittags = gittags.replaceAll(/(?m)^\s*\n/, "");
 
 		notify("${recipients}",
-		       "boottest-runner failed! (total: \${WARNINGS_COUNT})",
-		       "boottestRunner",
+		       "${subject}",
+		       "${template}",
 		       "serialboot.log,${results}/compile/config",
 		       false,
 		       ["global": global, "repo": repo,
 			"branch": branch, "config": config,
 			"overlay": overlay, "target": target,
-			"gittags": gittags]);
+			"gittags": gittags] + extras);
 	}
+}
+
+private failnotify(Map global, String subject, String template, String repo,
+		   String branch, String config, String overlay,
+		   String resultdir, String recipients, String target)
+{
+	failnotify(global, subject, template, repo, branch, config, overlay,
+		   resultdir, recipients, target, [:]);
 }
 
 def call(Map global, String boottest, String recipients) {
@@ -370,8 +380,10 @@ def call(Map global, String boottest, String recipients) {
 			return;
 			}
 
-			failnotify(global, repo, branch, config, overlay,
-				   resultdir, recipients, target);
+			failnotify(global,
+				   "boottest-runner failed! (total: \${WARNINGS_COUNT})",
+				   "boottestRunner", repo, branch, config,
+				   overlay, resultdir, recipients, target);
 		} catch(Exception ex) {
 			println("boottest \"${boottest}\" postprocessing failed:");
 			println(ex.toString());
