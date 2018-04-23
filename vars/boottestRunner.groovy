@@ -181,7 +181,9 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 
 	def config = helper.getEnv("CONFIG");
 	def overlay = helper.getEnv("OVERLAY");
-	def kernel = "${config}/${overlay}";
+
+	/* remember: config and overlay may contain slashes */
+	def kernelstash = "${config}_${overlay}".replaceAll('/','_');
 	config = null;
 	overlay = null;
 
@@ -208,8 +210,8 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 
 			libvirt.wait4onlineTimeout(target, 120);
 
-			targetprep(global, target, kernel);
-			kernel = null;
+			targetprep(global, target, kernelstash);
+			kernelstash = null;
 
 			try {
 				rebootTarget(hypervisor, target, seriallog, true);

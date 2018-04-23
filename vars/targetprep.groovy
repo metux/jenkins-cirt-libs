@@ -7,14 +7,14 @@
 
 import de.linutronix.cirt.inputcheck;
 
-def call(Map global, String target, String kernel) {
+def call(Map global, String target, String kernelstash) {
 	try {
 		inputcheck.check(global);
 		node(target) {
 			dir("targetprep") {
-				println("Run target preperation for ${kernel}");
+				println("Run target preperation for ${kernelstash}");
 				deleteDir();
-				unstash(kernel.replaceAll('/','_'));
+				unstash(kernelstash);
 
 				/*
 				 * Check if there are more or less than a single
@@ -57,11 +57,11 @@ def call(Map global, String target, String kernel) {
 			}
 		}
 	} catch(Exception ex) {
-		println("targetprep ${kernel} on ${target} failed:");
+		println("targetprep ${kernelstash} on ${target} failed:");
 		println(ex.toString());
 		println(ex.getMessage());
 		println(ex.getStackTrace());
-		error("targetprep ${kernel} on ${target} failed:");
+		error("targetprep ${kernelstash} on ${target} failed:");
 	}
 }
 
