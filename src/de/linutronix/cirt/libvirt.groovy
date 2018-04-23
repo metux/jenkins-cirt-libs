@@ -18,6 +18,7 @@ import hudson.model.*
 import hudson.util.*
 import hudson.node_monitors.*
 import hudson.slaves.*
+import hudson.AbortException
 
 static String getURI(String target) {
 	def jenkins = Jenkins.instance;
