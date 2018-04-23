@@ -101,3 +101,39 @@ static online(String target, String reason, Boolean fail = true) {
 		}
 	}
 }
+
+/*
+ * isOnline() is used in automatic tasting of CIRT-libs and has no
+ * user inside of CIRT-libs by now. Please do not remove.
+ */
+@NonCPS
+static isOnline(String target) {
+	def jenkins = Jenkins.instance
+
+	for (slave in jenkins.slaves) {
+		def computer = slave.computer
+		if (computer.name == target) {
+			return computer.isOnline();
+		}
+	}
+
+	error("Target Node ${target} does not exist.");
+}
+
+/*
+ * isOffline() is used in automatic tasting of CIRT-libs and has no
+ * user inside of CIRT-libs by now. Please do not remove.
+ */
+@NonCPS
+static isOffline(String target) {
+	def jenkins = Jenkins.instance
+
+	for (slave in jenkins.slaves) {
+		def computer = slave.computer
+		if (computer.name == target) {
+			return computer.isOffline();
+		}
+	}
+
+	error("Target Node ${target} does not exist.");
+}
