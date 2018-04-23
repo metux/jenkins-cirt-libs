@@ -21,6 +21,24 @@ class BoottestException extends RuntimeException {
         }
 }
 
+class RebootException extends RuntimeException {
+        RebootException (String message) {
+                super(message);
+        }
+}
+
+class ForcedRebootException extends RuntimeException {
+        ForcedRebootException (String message) {
+                super(message);
+        }
+}
+
+class ForcedRebootAndBoottestException extends RuntimeException {
+        ForcedRebootAndBoottestException (String message) {
+                super(message);
+        }
+}
+
 class CyclictestException extends RuntimeException {
 	CyclictestException (String message) {
 		super(message);
@@ -169,8 +187,10 @@ private checkOnline(String target, Boolean testboot, Boolean forced) {
 		def msg = "Target ${target} is not online after 310 seconds";
 		if (testboot) {
 			throw new BoottestException(msg);
+		} else if (!forced) {
+			throw new RebootException(msg);
 		} else {
-			error(msg);
+			throw new ForcedRebootException(msg);
 		}
 	}
 
@@ -192,10 +212,16 @@ private checkOnline(String target, Boolean testboot, Boolean forced) {
 private forcedRebootDefault(String hypervisor, String target, String seriallog,
 			   Boolean bootexception) {
 	println("Forced reboot into default kernel");
-	println("Forced reboot into default kernel");
-
-	rebootTarget(hypervisor, target, seriallog, false, true);
-	checkOnline(target, false, true);
+	try {
+		rebootTarget(hypervisor, target, seriallog, false, true);
+		checkOnline(target, false, true);
+	} catch (ForcedRebootException ex) {
+		if (bootexception) {
+			throw new ForcedRebootAndBoottestException(ex.getMessage());
+		} else {
+			throw ex;
+		}
+	}
 }
 
 private runner(Map global, helper helper, String boottest, String boottestdir, String resultdir, String recipients) {
@@ -267,6 +293,8 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 			} catch (BoottestException ex) {
 				forcedRebootDefault(hypervisor, target, seriallog_default, true);
 				throw ex;
+			} catch (RebootException ex) {
+				forcedRebootDefault(hypervisor, target, seriallog_default, false);
 			}
 		}
 	}
@@ -349,6 +377,11 @@ def call(Map global, String boottest, String recipients) {
 			      recipients);
 			h = null;
 		}
+	} catch (ForcedRebootAndBoottestException ex) {
+		failed = true;
+	} catch (ForcedRebootException ex) {
+		/* do not fail on dut testkernel reboot failures */
+		failed = false;
 	} catch (BoottestException ex) {
 		failed = true;
 	} catch (CyclictestException ex) {
