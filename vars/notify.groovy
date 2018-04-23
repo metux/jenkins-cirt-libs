@@ -40,26 +40,37 @@ def call(String to, String subject, String templatename, String attachment,
 		error("No E-Mail template given. Abort.");
 	}
 
-	println("Send Email notification to ${to}");
-	println("Email template: ${templatename}");
+	if (attachment) {
+		stash(includes: attachment, allowEmpty: true,
+		      name: 'attachment');
+	}
 
-	variables << env.getEnvironment();
-	variables['GIT_URL'] = env.GIT_URL;
-	variables['GIT_COMMIT'] = env.GIT_COMMIT;
+	node('master') {
+		if (attachment) {
+			unstash('attachment');
+		}
 
-	subject = "${env.BRANCH_NAME} #${env.BUILD_NUMBER} - ${subject}";
+		println("Send Email notification to ${to}");
+		println("Email template: ${templatename}");
 
-	def template = libraryResource("de/linutronix/cirt/email/${templatename}.txt");
-	/* remove JSP-style comments */
-	template = template.replaceAll(/(?s)<%--.*--%>/, "");
-	def body = renderTemplate(template, variables);
+		variables << env.getEnvironment();
+		variables['GIT_URL'] = env.GIT_URL;
+		variables['GIT_COMMIT'] = env.GIT_COMMIT;
 
-	URI uri = new URI(Hudson.instance.getRootUrl());
-	subject = "[${uri.getHost().replaceAll(/\..*/, "")}] ${subject}";
+		subject = "${env.BRANCH_NAME} #${env.BUILD_NUMBER} - ${subject}";
 
-	emailext(subject: subject, body: body, attachLog: log,
-		 attachmentsPattern: attachment, mimeType: "text/plain",
-		 to: to);
+		def template = libraryResource("de/linutronix/cirt/email/${templatename}.txt");
+		/* remove JSP-style comments */
+		template = template.replaceAll(/(?s)<%--.*--%>/, "");
+		def body = renderTemplate(template, variables);
+
+		URI uri = new URI(Hudson.instance.getRootUrl());
+		subject = "[${uri.getHost().replaceAll(/\..*/, "")}] ${subject}";
+
+		emailext(subject: subject, body: body, attachLog: log,
+			 attachmentsPattern: attachment,
+			 mimeType: "text/plain", to: to);
+	}
 }
 
 def call(String... params) {
