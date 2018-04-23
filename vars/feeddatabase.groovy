@@ -67,11 +67,11 @@ def runPythonScript(firstRun, lastRun, unstashDir, compiledir, helper, config, o
 		--git_branch ${env.GIT_BRANCH}\
 		--git_commit ${env.GIT_COMMIT}\
 		--gitrepo ${helper.getVar('GITREPO')}\
-		--publicrepo ${helper.getEnv('PUBLICREPO')}\
-		--httprepo ${helper.getEnv('HTTPREPO')}\
+		--publicrepo ${helper.getVar('PUBLICREPO', " ")}\
+		--httprepo ${helper.getVar('HTTPREPO', " ")}\
 		--tags_commit ${helper.getVar('TAGS_COMMIT')}\
 		--tags_name ${helper.getVar('TAGS_NAME')}\
-		--branch ${helper.getEnv('BRANCH')}\
+		--branch ${helper.getVar('BRANCH', " ")}\
 		--entryowner ${helper.getVar('ENTRYOWNER')}\
 		--first_run ${pFirstRun} --last_run ${pLastRun}")
 }
@@ -87,8 +87,8 @@ def collectBoottests(config, overlay, helper) {
 		String[] properties = [configbootprop]
 		helper.add2environment(properties);
 
-		def boottests = helper.getEnv("BOOTTESTS").split();
-		for (int k = 0; k < boottests.size(); k++) {
+		def boottests = helper.getVar("BOOTTESTS", " ").split();
+		for (int k = 0; k < boottests?.size(); k++) {
 			boottest = boottests.getAt(k)
 			try {
 				unstash(boottest.replaceAll('/','_'));
@@ -111,9 +111,9 @@ def collectCyclictests(kernel, helper) {
 	def cyclictest;
 	def cyclictestdir;
 
-	def target = helper.getEnv('TARGET');
-	def cyclictests = helper.getEnv("CYCLICTESTS").split();
-	for (int l = 0; l < cyclictests.size(); l++) {
+	def target = helper.getVar('TARGET', " ");
+	def cyclictests = helper.getVar("CYCLICTESTS").split();
+	for (int l = 0; l < cyclictests?.size(); l++) {
 		cyclictest = cyclictests.getAt(l)
 		cyclictestdir = "results/${kernel}/${target}/${cyclictest}";
 		try {

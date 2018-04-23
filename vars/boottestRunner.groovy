@@ -226,7 +226,8 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 				sh "echo \$(ssh ${target} cat /proc/cmdline) > ${cmdlinefile}";
 				cmdlinefile = null;
 
-				def cyclictests = helper.getEnv("CYCLICTESTS").split();
+				def cyclictests = helper.getVar("CYCLICTESTS",
+								" ").split();
 				if (cyclictests) {
 					def cyclicresult = cyclictest(global, target, cyclictests,
 								      recipients);

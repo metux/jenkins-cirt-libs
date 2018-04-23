@@ -24,13 +24,9 @@ private compileJob(Map global, String config, String overlay,
 		def h = new helper();
 
 		h.add2environment(boottestprops);
-		try {
-			h.showEnv();
-			boottests = h.getEnv("BOOTTESTS").split();
-			h = null;
-		} catch (java.lang.NullPointerException e) {
-			boottests = [];
-		}
+		h.showEnv();
+		boottests = h.getVar("BOOTTESTS", " ").split();
+		h = null;
 
 		return {
 			def compileresult = ''

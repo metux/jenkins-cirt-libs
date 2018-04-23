@@ -19,7 +19,7 @@ private runner(Map global, String target, String cyclictest) {
 	h.add2environment(properties);
 	properties = null;
 
-	def loadgen = h.getEnv("LOADGEN")?.trim();
+	def loadgen = h.getVar("LOADGEN", " ").trim();
 	def interval = h.getVar("INTERVAL");
 	def limit = h.getVar("LIMIT");
 	def duration = h.getVar("DURATION");
