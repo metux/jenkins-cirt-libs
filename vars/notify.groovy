@@ -43,7 +43,7 @@ def call(String to, String subject, String templatename, String attachment,
 	println("Send Email notification to ${to}");
 	println("Email template: ${templatename}");
 
-	variables << currentBuild.getRawBuild().getEnvironment();
+	variables << env.getEnvironment();
 	variables['GIT_URL'] = env.GIT_URL;
 	variables['GIT_COMMIT'] = env.GIT_COMMIT;
 
