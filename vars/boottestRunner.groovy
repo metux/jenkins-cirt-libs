@@ -27,7 +27,12 @@ class CyclictestException extends RuntimeException {
 	}
 }
 
-private rebootTarget(String hypervisor, String target, String seriallog, Boolean testboot) {
+private rebootTarget(String hypervisor, String target, String seriallog,
+		     Boolean testboot, Boolean forced) {
+	if (testboot && forced) {
+		error ("set testboot and forced in rebootTarget() is invalid");
+	}
+
 	def pidfile = "seriallogpid";
 	def off_message = "";
 
@@ -79,7 +84,11 @@ echo $! >'''+""" ${pidfile}"""
 	 * force reboot only when booting into default kernel.
 	 */
 	println("Reboot Target ${target}");
-	if (testboot) {
+	if (!forced) {
+		/*
+		 * Not forced reboot for testboot and after
+		 * successfull testboot
+		 */
 		sh "ssh ${target} \"sudo shutdown -r -t +1\"";
 	} else {
 		/*
@@ -88,8 +97,7 @@ echo $! >'''+""" ${pidfile}"""
 		 * destroy and start for half a minute to be sure
 		 * capacitors do not create wrong state on poweron.
 		 */
-		sh """ssh ${target} \"sudo shutdown -r -t +1\" || \
-(virsh -c ${hypervisor} destroy ${target}; sleep 30; virsh -c ${hypervisor} start ${target})""";
+		sh """(virsh -c ${hypervisor} destroy ${target}; sleep 30; virsh -c ${hypervisor} start ${target})""";
 	}
 
 	/*
@@ -134,7 +142,11 @@ private writeBootlog(String seriallog, String bootlog) {
 	}
 }
 
-private checkOnline(String target, Boolean testboot) {
+private checkOnline(String target, Boolean testboot, Boolean forced) {
+	if (testboot && forced) {
+		error ("set testboot and forced in checkOnline() is invalid");
+	}
+
 	def versionfile = "kversion";
 	def on_message = "";
 
@@ -175,6 +187,15 @@ private checkOnline(String target, Boolean testboot) {
 	/* TODO add a check for the default Kernel */
 
 	println("Target is back");
+}
+
+private forcedRebootDefault(String hypervisor, String target, String seriallog,
+			   Boolean bootexception) {
+	println("Forced reboot into default kernel");
+	println("Forced reboot into default kernel");
+
+	rebootTarget(hypervisor, target, seriallog, false, true);
+	checkOnline(target, false, true);
 }
 
 private runner(Map global, helper helper, String boottest, String boottestdir, String resultdir, String recipients) {
@@ -218,13 +239,13 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 			kernelstash = null;
 
 			try {
-				rebootTarget(hypervisor, target, seriallog, true);
+				rebootTarget(hypervisor, target, seriallog, true, false);
 
 				writeBootlog(seriallog, bootlog);
 				seriallog = null;
 				bootlog = null;
 
-				checkOnline(target, true);
+				checkOnline(target, true, false);
 
 				/* write cmdline to file */
 				sh "echo \$(ssh ${target} cat /proc/cmdline) > ${cmdlinefile}";
@@ -239,11 +260,13 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 						throw new CyclictestException("One or more cyclictests failed.");
 					}
 				}
-			} finally {
-				println("Reboot into default kernel");
-				rebootTarget(hypervisor, target, seriallog_default, false);
-				seriallog_default = null;
-				checkOnline(target, false);
+
+				println("Not forced reboot into default kernel");
+				rebootTarget(hypervisor, target, seriallog_default, false, false);
+				checkOnline(target, false, false);
+			} catch (BoottestException ex) {
+				forcedRebootDefault(hypervisor, target, seriallog_default, true);
+				throw ex;
 			}
 		}
 	}
