@@ -251,6 +251,7 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 			def seriallog_default = "${resultdir}/serialboot-default.log";
 			def seriallog = "${resultdir}/serialboot.log";
 			def bootlog = "${resultdir}/boot.log";
+			def rawbootlog = "${resultdir}/rawboot.log";
 
 			/*
 			 * Create result directory and add cmdlinefile
@@ -276,13 +277,24 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 
 				extractSerialBootlog(seriallog, bootlog);
 				seriallog = null;
-				bootlog = null;
 
 				checkOnline(target, true, false);
 
 				/* write cmdline to file */
 				sh "echo \$(ssh ${target} cat /proc/cmdline) > ${cmdlinefile}";
 				cmdlinefile = null;
+
+				/* get dmesg output from target */
+				def loglevel = "emerg,alert,crit,err";
+				sh "ssh ${target} \"sudo dmesg -r\" > ${rawbootlog}";
+				/*
+				 * TODO: omit loglevel until warnings plugin
+				 * is fixed.
+				 */
+				sh "ssh ${target} \"sudo dmesg --level=${loglevel}\" > ${bootlog}";
+				loglevel = null;
+				bootlog = null;
+				rawbootlog = null;
 
 				def cyclictests = safesplit.split(helper.getVar("CYCLICTESTS", " "));
 				if (cyclictests) {
