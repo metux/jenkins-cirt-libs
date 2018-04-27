@@ -5,6 +5,7 @@
  * CI-RT boottest
  */
 
+import de.linutronix.cirt.VarNotSetException;
 import de.linutronix.cirt.inputcheck;
 
 private boottestJob(Map global, String boottest, String recipients) {
@@ -44,6 +45,9 @@ def call(Map global, String[] boottests, String recipients) {
 			}
 		}
 	} catch(Exception ex) {
+		if (ex instanceof VarNotSetException) {
+			throw ex;
+		}
 		println("boottest failed:");
 		println(ex.toString());
 		println(ex.getMessage());

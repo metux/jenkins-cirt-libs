@@ -5,6 +5,7 @@
  * CI-RT compiletest
  */
 
+import de.linutronix.cirt.VarNotSetException;
 import de.linutronix.cirt.helper;
 import de.linutronix.cirt.inputcheck;
 
@@ -125,6 +126,9 @@ def call(Map global) {
 				gitcheckout, recipients);
 		}
 	} catch(Exception ex) {
+		if (ex instanceof VarNotSetException) {
+                        throw ex;
+                }
                 println("compiletest failed:");
                 println(ex.toString());
                 println(ex.getMessage());

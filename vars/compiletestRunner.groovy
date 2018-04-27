@@ -5,6 +5,7 @@
  * CI-RT compiletest runner
  */
 
+import de.linutronix.cirt.VarNotSetException;
 import de.linutronix.cirt.inputcheck;
 import java.io.File;
 
@@ -234,6 +235,9 @@ def call(Map global, String repo, String branch,
 		}
 		return result;
 	} catch(Exception ex) {
+		if (ex instanceof VarNotSetException) {
+                        throw ex;
+                }
                 println("compiletest runner failed:");
                 println(ex.toString());
                 println(ex.getMessage());

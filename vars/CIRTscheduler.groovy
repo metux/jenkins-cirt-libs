@@ -6,6 +6,7 @@
  * Copyright (c) 2017,2018 Linutronix GmbH
  */
 
+import de.linutronix.cirt.VarNotSetException;
 import de.linutronix.cirt.inputcheck;
 
 def call(body) {
@@ -82,6 +83,13 @@ def call(body) {
 					script {
 						try {
 							compiletest(params);
+						} catch(VarNotSetException ex) {
+							notify("${recipients}",
+							       "Testdescription is not valid",
+							       "invalidDescr",
+							       null,
+							       false,
+							       ["failureText": ex.toString()]);
 						} catch(Exception ex) {
 							println("compiletest failed:");
 							println(ex.toString());

@@ -5,6 +5,8 @@
  * CI-RT boottest runner
  */
 
+import de.linutronix.cirt.VarNotSetException;
+import de.linutronix.cirt.TargetOnOfflineException;
 import de.linutronix.cirt.helper;
 import de.linutronix.cirt.inputcheck;
 import de.linutronix.cirt.libvirt;
@@ -318,6 +320,9 @@ def call(Map global, String boottest, String recipients) {
 	} catch (CyclictestException ex) {
 		cyclictestFailed = true;
 	} catch(Exception ex) {
+		if (ex instanceof VarNotSetException) {
+                        throw ex;
+                }
 		println("boottest \"${boottest}\" failed:");
 		println(ex.toString());
 		println(ex.getMessage());

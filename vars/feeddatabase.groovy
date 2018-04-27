@@ -5,6 +5,7 @@
  * CI-RT job to feed results into database
  */
 
+import de.linutronix.cirt.VarNotSetException;
 import de.linutronix.cirt.helper;
 import hudson.AbortException
 
@@ -146,6 +147,9 @@ def call(Map global) {
 			collectCompiletests(configs, overlays, unstashDir, h);
 		}
 	} catch(Exception ex) {
+		if (ex instanceof VarNotSetException) {
+                        throw ex;
+                }
 		println("feeddatabase failed:");
 		println(ex.toString());
 		println(ex.getMessage());
