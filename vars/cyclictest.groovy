@@ -12,12 +12,12 @@ private failnotify(Map global, helper h, String target,
 		   String cyclictestdir, String recipients)
 {
 	def loadgen = h.getEnv("LOADGEN")?.trim();
-	def interval = h.getEnv("INTERVAL");
-	def limit = h.getEnv("LIMIT");
+	def interval = h.getVar("INTERVAL");
+	def limit = h.getVar("LIMIT");
 	def repo = h.getEnv("GITREPO");
-	def branch = h.getEnv("BRANCH");
-	def config = h.getEnv("CONFIG");
-	def overlay = h.getEnv("OVERLAY");
+	def branch = h.getVar("BRANCH");
+	def config = h.getVar("CONFIG");
+	def overlay = h.getVar("OVERLAY");
 	def results = "results/${config}/${overlay}";
 
 	dir("failurenotification") {
@@ -57,9 +57,11 @@ private parse_results(Map global, String target, String ct, String recipients)
 			       "${ct}.properties"];
 	h.add2environment(properties);
 	properties = null;
-	def config = h.getEnv("CONFIG");
-	def overlay = h.getEnv("OVERLAY");
+
+	def config = h.getVar("CONFIG");
+	def overlay = h.getVar("OVERLAY");
 	def kernel = "${config}/${overlay}";
+
 	config = null;
 	overlay = null;
 
@@ -69,10 +71,10 @@ private parse_results(Map global, String target, String ct, String recipients)
 	script_content = libraryResource('de/linutronix/cirt/cyclictest/cyclictest2xml.py');
 	writeFile file:"collect", text:script_content;
 	sh("python3 collect ${ct} ${cyclictestdir} \
-	    --entryowner ${h.getEnv('ENTRYOWNER')}			\
-	    --duration ${h.getEnv('DURATION')}				\
-	    --interval ${h.getEnv('INTERVAL')}				\
-	    --limit ${h.getEnv('LIMIT')}")
+	    --entryowner ${h.getVar('ENTRYOWNER')}	\
+	    --duration ${h.getVar('DURATION')}		\
+	    --interval ${h.getVar('INTERVAL')}		\
+	    --limit ${h.getVar('LIMIT')}")
 
 	def result = junit_result("${cyclictestdir}/pyjutest.xml");
 	archiveArtifacts("${cyclictestdir}/pyjutest.xml");

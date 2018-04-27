@@ -174,13 +174,13 @@ private checkOnline(String target, Boolean testboot) {
 }
 
 private runner(Map global, helper helper, String boottest, String boottestdir, String resultdir, String recipients) {
-	def target = helper.getEnv("TARGET");
+	def target = helper.getVar("TARGET");
 
 	def hypervisor = libvirt.getURI(target);
 	println("URI = ${hypervisor}");
 
-	def config = helper.getEnv("CONFIG");
-	def overlay = helper.getEnv("OVERLAY");
+	def config = helper.getVar("CONFIG");
+	def overlay = helper.getVar("OVERLAY");
 
 	/* remember: config and overlay may contain slashes */
 	def kernelstash = "${config}_${overlay}".replaceAll('/','_');
@@ -297,16 +297,11 @@ def call(Map global, String boottest, String recipients) {
 					       "${boottest}.properties"];
 			h.add2environment(properties);
 
-			target = h.getEnv("TARGET");
-			/* TODO: move environment checks into CIRTbuildenv */
-			if (!target?.trim()) {
-				error("environment TARGET not set. Abort.");
-			}
-
-			repo = h.getEnv("GITREPO");
-			branch = h.getEnv("BRANCH");
-			config = h.getEnv("CONFIG");
-			overlay = h.getEnv("OVERLAY");
+			target = h.getVar("TARGET");
+			repo = h.getVar("GITREPO");
+			branch = h.getVar("BRANCH");
+			config = h.getVar("CONFIG");
+			overlay = h.getVar("OVERLAY");
 			def kernel = "${config}/${overlay}";
 
 			/* Last subdirectory "boottest" for results is created by scripts */

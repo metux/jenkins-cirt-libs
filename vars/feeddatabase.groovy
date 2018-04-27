@@ -66,13 +66,13 @@ def runPythonScript(firstRun, lastRun, unstashDir, compiledir, helper, config, o
 		--config ${config}\
 		--git_branch ${env.GIT_BRANCH}\
 		--git_commit ${env.GIT_COMMIT}\
-		--gitrepo ${helper.getEnv('GITREPO')}\
+		--gitrepo ${helper.getVar('GITREPO')}\
 		--publicrepo ${helper.getEnv('PUBLICREPO')}\
 		--httprepo ${helper.getEnv('HTTPREPO')}\
-		--tags_commit ${helper.getEnv('TAGS_COMMIT')}\
-		--tags_name ${helper.getEnv('TAGS_NAME')}\
+		--tags_commit ${helper.getVar('TAGS_COMMIT')}\
+		--tags_name ${helper.getVar('TAGS_NAME')}\
 		--branch ${helper.getEnv('BRANCH')}\
-		--entryowner ${helper.getEnv('ENTRYOWNER')}\
+		--entryowner ${helper.getVar('ENTRYOWNER')}\
 		--first_run ${pFirstRun} --last_run ${pLastRun}")
 }
 
@@ -139,8 +139,8 @@ def call(Map global) {
 			h.add2environment(properties);
 
 			def unstashDir = "db_unstash";
-			def configs = h.getEnv('CONFIGS').split();
-			def overlays = h.getEnv('OVERLAYS').split();
+			def configs = h.getVar('CONFIGS').split();
+			def overlays = h.getVar('OVERLAYS').split();
 
 			println("collect all results");
 			collectCompiletests(configs, overlays, unstashDir, h);

@@ -19,17 +19,16 @@ private runner(Map global, String target, String cyclictest) {
 	h.add2environment(properties);
 	properties = null;
 
-	def loadgen = h.getEnv("LOADGEN");
-	loadgen?.trim();
-	def interval = h.getEnv("INTERVAL");
-	def limit = h.getEnv("LIMIT");
-	def duration = h.getEnv("DURATION");
+	def loadgen = h.getEnv("LOADGEN")?.trim();
+	def interval = h.getVar("INTERVAL");
+	def limit = h.getVar("LIMIT");
+	def duration = h.getVar("DURATION");
+	def config = h.getVar("CONFIG");
+	def overlay = h.getVar("OVERLAY");
+	h = null;
 
 	println("cyclictest-runner: ${target} ${cyclictest} ${interval} ${limit}\n${loadgen}");
 
-	def config = h.getEnv("CONFIG");
-	def overlay = h.getEnv("OVERLAY");
-	h = null;
 	def kernel = "${config}/${overlay}";
 	def cyclictestdir = "results/${kernel}/${target}/${cyclictest}";
 	kernel = null

@@ -116,27 +116,15 @@ def call(Map global) {
 			def recipients = "";
 
 			h.add2environment(properties);
-			/*
-			 * TODO: Check, if properties file has all
-			 * information will be later moved into
-			 * environment verification
-			 */
-			try {
-				configs = h.getEnv('CONFIGS');
-				overlays = h.getEnv('OVERLAYS');
-				gitrepo = h.getEnv('GITREPO');
-				gitcheckout = h.getEnv('GIT_CHECKOUT');
-				recipients = h.getEnv('RECIPIENTS').trim();
 
-				h = null;
-			}
-			/* Catches not set environment Parameters */
-			catch (java.lang.NullPointerException e) {
-				println(e.toString());
-				println(e.getMessage());
-				println(e.getStackTrace());
-				error("CONFIGS, OVERLAYS, GITREPO, GIT_CHECKOUT or RECIPIENTS not set. Abort.");
-			}
+			configs = h.getVar('CONFIGS').split();
+			overlays = h.getVar('OVERLAYS').split();
+			gitrepo = h.getVar('GITREPO');
+			gitcheckout = h.getVar('GIT_CHECKOUT');
+			recipients = h.getVar('RECIPIENTS');
+
+			h = null;
+
 			compile(global, configs, overlays, gitrepo,
 				gitcheckout, recipients);
 		}
