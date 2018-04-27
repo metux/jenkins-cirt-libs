@@ -6,6 +6,7 @@
  */
 
 import de.linutronix.lib4lib.logger;
+import de.linutronix.lib4lib.safesplit;
 
 def check_pkgversion(String pkg, String dver)
 {
@@ -14,8 +15,9 @@ def check_pkgversion(String pkg, String dver)
 	if (dver != "None") {
 		// used to check version
 		def dpkg = sh(returnStdout: true, script: "dpkg -l $pkg | grep ^ii");
-		def dpkg_pkg = dpkg.split()[1];
-		def dpkg_ver = dpkg.split()[2];
+		dpkg = safesplit.split(dpkg);
+		def dpkg_pkg = dpkg[1];
+		def dpkg_ver = dpkg[2];
 		// this raises an exception if the package version is not correct
 		sh("dpkg --compare-versions $dpkg_ver = $dver");
 	}

@@ -8,6 +8,7 @@
 import de.linutronix.cirt.VarNotSetException;
 import de.linutronix.cirt.helper;
 import de.linutronix.cirt.inputcheck;
+import de.linutronix.lib4lib.safesplit;
 
 private compileJob(Map global, String config, String overlay,
 		   String repo, String branch, String recipients) {
@@ -26,7 +27,7 @@ private compileJob(Map global, String config, String overlay,
 
 		h.add2environment(boottestprops);
 		h.showEnv();
-		boottests = h.getVar("BOOTTESTS", " ").split();
+		boottests = safesplit.split(h.getVar("BOOTTESTS", " "));
 		h = null;
 
 		return {

@@ -10,6 +10,7 @@ import de.linutronix.cirt.TargetOnOfflineException;
 import de.linutronix.cirt.helper;
 import de.linutronix.cirt.inputcheck;
 import de.linutronix.cirt.libvirt;
+import de.linutronix.lib4lib.safesplit;
 
 import hudson.AbortException
 
@@ -118,7 +119,7 @@ private writeBootlog(String seriallog, String bootlog) {
 
 	/* extract kexec bootlog of serial log*/
 	def serial_content = readFile(seriallog);
-	def serial_splits = serial_content.split(kexec_delimiter);
+	def serial_splits = safesplit.split(serial_content, kexec_delimiter);
 
 	/* error, if kexec_delimiter do not occur, or occurs more than one time */
 	def cnt = serial_splits.size() - 1;
@@ -228,8 +229,7 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 				sh "echo \$(ssh ${target} cat /proc/cmdline) > ${cmdlinefile}";
 				cmdlinefile = null;
 
-				def cyclictests = helper.getVar("CYCLICTESTS",
-								" ").split();
+				def cyclictests = safesplit.split(helper.getVar("CYCLICTESTS", " "));
 				if (cyclictests) {
 					def cyclicresult = cyclictest(global, target, cyclictests,
 								      recipients);

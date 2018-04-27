@@ -6,6 +6,7 @@
  */
 
 import de.linutronix.cirt.inputcheck;
+import de.linutronix.lib4lib.safesplit;
 
 private String readCleanFile(String filename) {
 	def content = readFile(filename);
@@ -130,8 +131,8 @@ private buildArchCompileEnv(List configs)
 
 	if (fileExists("compile/env/compile")) {
 		compilefile = readCleanFile("compile/env/compile");
-		compile = compilefile.split('\n').collectEntries { entry ->
-			def pair = entry.split('=');
+		compile = safesplit.split(compilefile, '\n').collectEntries { entry ->
+			def pair = safesplit.split(entry, '=');
 			[(pair.first()): pair.last()]
 		}
 	} else {
@@ -150,9 +151,9 @@ private buildArchCompileEnv(List configs)
 
 		if (fileExists("compile/env/${arch}")) {
 			def archcompilefile = readCleanFile("compile/env/${arch}");
-			archcompile = archcompilefile.split('\n')
+			archcompile = safesplit.split(archcompilefile, '\n')
 			.collectEntries { entry ->
-				def pair = entry.split('=')
+				def pair = safesplit.split(entry, '=')
 				[(pair.first()): pair.last()]
 			}
 		} else {
@@ -183,7 +184,7 @@ private prepareCyclictestEnv(String boottest) {
 		cyclictest = null
 		content += cyclictests;
 		cyclictests -= ~/\s*CYCLICTESTS\s*=/
-		cyclictests = cyclictests.split();
+		cyclictests = safesplit.split(cyclictests);
 
 		for (int i = 0; i < cyclictests.size(); i++) {
 			def ct = cyclictests.getAt(i);
@@ -265,10 +266,10 @@ private String getValue(String content, String key) {
 }
 
 private buildCompileEnv(String globalenv) {
-	List configs = getValue(globalenv, "CONFIGS").split();
-	List overlays = getValue(globalenv, "OVERLAYS").split();
+	List configs = safesplit.split(getValue(globalenv, "CONFIGS"));
+	List overlays = safesplit.split(getValue(globalenv, "OVERLAYS"));
 	def bootlist = list2prop('env/boottest.list', 'BOOTTESTS_ALL');
-	List boottests = getValue(bootlist, "BOOTTESTS_ALL").split();
+	List boottests = safesplit.split(getValue(bootlist, "BOOTTESTS_ALL"));
 
 	buildArchCompileEnv(configs);
 

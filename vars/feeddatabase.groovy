@@ -7,6 +7,8 @@
 
 import de.linutronix.cirt.VarNotSetException;
 import de.linutronix.cirt.helper;
+import de.linutronix.lib4lib.safesplit;
+
 import hudson.AbortException
 
 def collectCompiletests(configs, overlays, unstashDir, helper) {
@@ -88,7 +90,7 @@ def collectBoottests(config, overlay, helper) {
 		String[] properties = [configbootprop]
 		helper.add2environment(properties);
 
-		def boottests = helper.getVar("BOOTTESTS", " ").split();
+		def boottests = safesplit.split(helper.getVar("BOOTTESTS", " "));
 		for (int k = 0; k < boottests?.size(); k++) {
 			boottest = boottests.getAt(k)
 			try {
@@ -113,7 +115,7 @@ def collectCyclictests(kernel, helper) {
 	def cyclictestdir;
 
 	def target = helper.getVar('TARGET', " ");
-	def cyclictests = helper.getVar("CYCLICTESTS").split();
+	def cyclictests = safesplit.split(helper.getVar("CYCLICTESTS", " "));
 	for (int l = 0; l < cyclictests?.size(); l++) {
 		cyclictest = cyclictests.getAt(l)
 		cyclictestdir = "results/${kernel}/${target}/${cyclictest}";
@@ -140,8 +142,8 @@ def call(Map global) {
 			h.add2environment(properties);
 
 			def unstashDir = "db_unstash";
-			def configs = h.getVar('CONFIGS').split();
-			def overlays = h.getVar('OVERLAYS').split();
+			def configs = safesplit.split(h.getVar('CONFIGS'));
+			def overlays = safesplit.split(h.getVar('OVERLAYS'));
 
 			println("collect all results");
 			collectCompiletests(configs, overlays, unstashDir, h);
