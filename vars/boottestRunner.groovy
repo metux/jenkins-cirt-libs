@@ -10,6 +10,7 @@ import de.linutronix.cirt.TargetOnOfflineException;
 import de.linutronix.cirt.helper;
 import de.linutronix.cirt.inputcheck;
 import de.linutronix.cirt.libvirt;
+import de.linutronix.cirt.TargetOnOfflineException;
 import de.linutronix.lib4lib.safesplit;
 
 import hudson.AbortException
@@ -150,7 +151,7 @@ private checkOnline(String target, Boolean testboot) {
 		/* Set target online */
 		libvirt.online(target, on_message, testboot);
 		on_message = null;
-	} catch (AbortException ex) {
+	} catch (AbortException | TargetOnOfflineException ex) {
 		println("Target ${target} is not online after 310 seconds");
 
 		def msg = "Target ${target} is not online after 310 seconds";
@@ -330,7 +331,8 @@ def call(Map global, String boottest, String recipients) {
 	} catch (CyclictestException ex) {
 		cyclictestFailed = true;
 	} catch(Exception ex) {
-		if (ex instanceof VarNotSetException) {
+		if (ex instanceof VarNotSetException ||
+		    ex instanceof TargetOnOfflineException) {
                         throw ex;
                 }
 		println("boottest \"${boottest}\" failed:");
@@ -384,6 +386,18 @@ def call(Map global, String boottest, String recipients) {
 				   "boottest-runner failed! (total: \${WARNINGS_COUNT})",
 				   "boottestRunner", repo, branch, config,
 				   overlay, resultdir, recipients, target);
+		} catch (TargetOnOfflineException ex) {
+			println("On/Offline problem with target: ${target}");
+
+			/* inform both: test user and test system admins */
+			failnotify(global,
+				   "On/Offline problem with target: ${target}",
+				   "offlineTarget", repo, branch, config,
+				   overlay, resultdir,
+				   "${params.GUI_FAILURE_NOTIFICATION} ${recipients}",
+				   target);
+			/* act like junit and mark test as UNSTABLE */
+			currentBuild.result = 'UNSTABLE';
 		} catch(Exception ex) {
 			println("boottest \"${boottest}\" postprocessing failed:");
 			println(ex.toString());
