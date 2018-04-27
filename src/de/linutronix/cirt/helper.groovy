@@ -53,3 +53,13 @@ def getEnv() {
 def getEnv(String name) {
 	return environment[name];
 }
+
+def getVar(String name) {
+	def e = environment[name];
+
+	if (!e) {
+		throw new VarNotSetException(name);
+	}
+
+	return e;
+}
