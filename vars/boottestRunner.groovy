@@ -294,6 +294,7 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 				forcedRebootDefault(hypervisor, target, seriallog_default, true);
 				throw ex;
 			} catch (RebootException ex) {
+				def repo = helper.getVar("GITREPO");
 				failnotify(global,
 					   "boottestRunner - Reboot of \"${target}\" failed",
 					   "boottestReboot", global, repo,
