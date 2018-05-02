@@ -5,12 +5,11 @@
  * CI-RT boottest runner
  */
 
-import de.linutronix.cirt.VarNotSetException;
 import de.linutronix.cirt.TargetOnOfflineException;
+import de.linutronix.cirt.VarNotSetException;
 import de.linutronix.cirt.helper;
 import de.linutronix.cirt.inputcheck;
 import de.linutronix.cirt.libvirt;
-import de.linutronix.cirt.TargetOnOfflineException;
 import de.linutronix.lib4lib.safesplit;
 
 import hudson.AbortException
