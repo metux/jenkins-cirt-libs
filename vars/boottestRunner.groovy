@@ -256,6 +256,7 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 			dir(resultdir) {
 				writeFile file:"${cmdlinefile}" - "${resultdir}/", text:'none';
 				writeFile file:"${bootlog}" - "${resultdir}/", text:'--- no boot log available ---';
+				writeFile file:"${seriallog}" - "${resultdir}/", text:'--- no boot log available ---';
 			}
 
 			libvirt.wait4onlineTimeout(target, 120);
@@ -407,9 +408,22 @@ def call(Map global, String boottest, String recipients) {
 		failed = true;
 	} catch (CyclictestException ex) {
 		cyclictestFailed = true;
+	} catch (TargetOnOfflineException ex) {
+		println("On/Offline problem with target: ${target}");
+
+		resultdir = "boottestRunner/${boottestdir}/" + resultdir;
+		/* inform both: test user and test system admins */
+		failnotify(global,
+			   "On/Offline problem with target: ${target}",
+			   "offlineTarget", repo, branch, config,
+			   overlay, resultdir,
+			   "${params.GUI_FAILURE_NOTIFICATION} ${recipients}",
+			   target);
+		/* act like junit and mark test as UNSTABLE */
+		currentBuild.result = 'UNSTABLE';
+		return;
 	} catch(Exception ex) {
-		if (ex instanceof VarNotSetException ||
-		    ex instanceof TargetOnOfflineException) {
+		if (ex instanceof VarNotSetException) {
                         throw ex;
                 }
 		println("boottest \"${boottest}\" failed:");
@@ -463,18 +477,6 @@ def call(Map global, String boottest, String recipients) {
 				   "boottest-runner failed! (total: \${WARNINGS_COUNT})",
 				   "boottestRunner", repo, branch, config,
 				   overlay, resultdir, recipients, target);
-		} catch (TargetOnOfflineException ex) {
-			println("On/Offline problem with target: ${target}");
-
-			/* inform both: test user and test system admins */
-			failnotify(global,
-				   "On/Offline problem with target: ${target}",
-				   "offlineTarget", repo, branch, config,
-				   overlay, resultdir,
-				   "${params.GUI_FAILURE_NOTIFICATION} ${recipients}",
-				   target);
-			/* act like junit and mark test as UNSTABLE */
-			currentBuild.result = 'UNSTABLE';
 		} catch(Exception ex) {
 			println("boottest \"${boottest}\" postprocessing failed:");
 			println(ex.toString());
