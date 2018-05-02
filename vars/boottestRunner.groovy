@@ -38,12 +38,6 @@ class ForcedRebootAndBoottestException extends RuntimeException {
         }
 }
 
-class CyclictestException extends RuntimeException {
-	CyclictestException (String message) {
-		super(message);
-	}
-}
-
 private rebootTarget(String hypervisor, String target, String seriallog,
 		     Boolean testboot, Boolean forced) {
 	if (testboot && forced) {
@@ -279,12 +273,8 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 
 				def cyclictests = safesplit.split(helper.getVar("CYCLICTESTS", " "));
 				if (cyclictests) {
-					def cyclicresult = cyclictest(global, target, cyclictests,
-								      recipients);
-
-					if (cyclicresult == 'UNSTABLE') {
-						throw new CyclictestException("One or more cyclictests failed.");
-					}
+					cyclictest(global, target, cyclictests,
+						   recipients);
 				}
 
 				println("Not forced reboot into default kernel");
@@ -349,7 +339,6 @@ private failnotify(Map global, String subject, String template, String repo,
 
 def call(Map global, String boottest, String recipients) {
 	def failed = false;
-	def cyclictestFailed = false;
 	def boottestdir = "";
 	def resultdir = "boottest";
 	def repo = "";
@@ -406,8 +395,6 @@ def call(Map global, String boottest, String recipients) {
 		}
 	} catch (BoottestException ex) {
 		failed = true;
-	} catch (CyclictestException ex) {
-		cyclictestFailed = true;
 	} catch (TargetOnOfflineException ex) {
 		println("On/Offline problem with target: ${target}");
 
@@ -468,9 +455,8 @@ def call(Map global, String boottest, String recipients) {
 
 			junit("${resultdir}/pyjutest.xml");
 
-			/* Do not notify on failed cyclictest nor stable test */
-			if (cyclictestFailed || !failed) {
-			return;
+			if (!failed) {
+				return;
 			}
 
 			failnotify(global,
