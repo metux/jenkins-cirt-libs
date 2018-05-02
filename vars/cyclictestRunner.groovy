@@ -5,6 +5,7 @@
  * CI-RT cyclictest runner
  */
 
+import de.linutronix.cirt.VarNotSetException;
 import de.linutronix.cirt.helper;
 
 private runner(Map global, String target, String cyclictest) {
@@ -71,6 +72,9 @@ def call(Map global, String target, String cyclictest) {
 				runner(global, target, cyclictest);
 			}
 		} catch(Exception ex) {
+			if (ex instanceof VarNotSetException) {
+				throw ex;
+			}
 			println("cyclictest runner on ${target} failed:");
 			println(ex.toString());
 			println(ex.getMessage());

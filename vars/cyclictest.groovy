@@ -5,6 +5,7 @@
  * CI-RT cyclictest
  */
 
+import de.linutronix.cirt.VarNotSetException;
 import de.linutronix.cirt.inputcheck;
 import de.linutronix.cirt.helper;
 
@@ -112,7 +113,21 @@ def call(Map global, String target, String[] cyclictests, String recipients) {
 		} else {
 			return 'SUCCESS';
 		}
+	} catch(VarNotSetException ex) {
+		/*
+		 * Notify here to avoid nested exception handling in
+		 * boottestRunner.
+		 */
+		notify("${recipients}",
+		       "Testdescription is not valid",
+		       "invalidDescr",
+		       null,
+		       false,
+		       ["failureText": ex.toString()]);
 	} catch(Exception ex) {
+		if (ex instanceof VarNotSetException) {
+                        throw ex;
+                }
                 println("cyclictest on ${target} failed:");
                 println(ex.toString());
                 println(ex.getMessage());
