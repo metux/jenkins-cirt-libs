@@ -91,7 +91,6 @@ private parse_results(Map global, String target, String ct, String recipients)
 def call(Map global, String target, String[] cyclictests, String recipients) {
 	try {
                 inputcheck.check(global);
-		def results = [];
 		node('master') {
 			dir ("cyclictest") {
 				deleteDir();
@@ -103,15 +102,10 @@ def call(Map global, String target, String[] cyclictests, String recipients) {
 					 * workspace directory doesn't has to be changed
 					 */
 					cyclictestRunner(global, target, ct);
-					results << parse_results(global, target, ct,
-								 recipients);
+					parse_results(global, target, ct,
+						      recipients);
 				}
 			}
-		}
-		if (results.contains('UNSTABLE')) {
-			return 'UNSTABLE';
-		} else {
-			return 'SUCCESS';
 		}
 	} catch(VarNotSetException ex) {
 		/*
