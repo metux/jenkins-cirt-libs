@@ -77,7 +77,8 @@ def call(String to, String subject, String templatename, String attachment,
 
 			emailext(subject: subject, body: body, attachLog: log,
 				 attachmentsPattern: attachment,
-				 mimeType: "text/plain", to: to);
+				 mimeType: "text/plain", to: to,
+				 compressLog: true);
 		}
 	}
 }
