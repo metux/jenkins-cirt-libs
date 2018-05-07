@@ -188,7 +188,9 @@ private checkOnline(String target, Boolean testboot, Boolean forced) {
 	}
 
 	/* Test for the proper kernel version */
-	sh 'echo $(ssh '+target+' uname -r | sed \"s/.*-rt[0-9]\\+-\\([0-9]\\+\\).*$/\\1/\") > '+versionfile;
+	sh 'echo $(ssh ' + target +
+		' uname -r | sed \"s/.*-rt[0-9]\\+\\(-rc[0-9]\\+\\)\\?-\\([0-9]\\+\\).*$/\\2/\") > ' +
+		versionfile;
 	def version = readFile(versionfile).trim();
 	versionfile = null;
 
