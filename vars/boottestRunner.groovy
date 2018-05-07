@@ -142,7 +142,7 @@ private rebootTarget(String hypervisor, String target, String seriallog,
 	rebootTarget(hypervisor, target, seriallog, testboot, forced, false);
 }
 
-private writeBootlog(String seriallog, String bootlog) {
+private extractSerialBootlog(String seriallog, String bootlog) {
 	def kexec_delimiter = "--- CI-RT Booting Testkernel Kexec ---";
 
 	/* ensure seriallog is synced before reading */
@@ -274,7 +274,7 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 			try {
 				rebootTarget(hypervisor, target, seriallog, true, false);
 
-				writeBootlog(seriallog, bootlog);
+				extractSerialBootlog(seriallog, bootlog);
 				seriallog = null;
 				bootlog = null;
 
