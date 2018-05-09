@@ -474,7 +474,8 @@ def call(Map global, String boottest, String recipients) {
 					 fingerprint: true);
 			stash(name: boottest.replaceAll('/','_'),
 			      includes: "${resultdir}/pyjutest.xml, " +
-			      "${resultdir}/cmdline");
+			      "${resultdir}/cmdline, " +
+			      "${resultdir}/boot.log");
 
 			junit("${resultdir}/pyjutest.xml");
 
