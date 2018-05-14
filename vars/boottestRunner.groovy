@@ -380,8 +380,8 @@ def call(Map global, String boottest, String recipients) {
 		if (params.GUI_FAILURE_NOTIFICATION) {
 			failnotify(global,
 				   "Forced reboot of \"${target}\" failed",
-				   "boottestRunner", global, repo, branch,
-				   config, overlay, resultdir,
+				   "boottestRunner", repo, branch, config,
+				   overlay, resultdir,
 				   "${params.GUI_FAILURE_NOTIFICATION}",
 				   target, ["bootexception": true]);
 		}
@@ -391,8 +391,8 @@ def call(Map global, String boottest, String recipients) {
 		if (params.GUI_FAILURE_NOTIFICATION) {
 			failnotify(global,
 				   "Forced reboot of \"${target}\" failed",
-				   "boottestRunner", global, repo, branch,
-				   config, overlay, resultdir,
+				   "boottestRunner", repo, branch, config,
+				   overlay, resultdir,
 				   "${params.GUI_FAILURE_NOTIFICATION}",
 				   target, ["bootexception": false]);
 		}
