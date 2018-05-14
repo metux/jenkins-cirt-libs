@@ -313,9 +313,14 @@ private failnotify(Map global, String subject, String template, String repo,
 		/*
 		 * Specifying a relative path starting with "../" does not
 		 * work in notify attachments.
-		 * Copy serialboot.log into this folder.
+		 * serialboot.log only exists for booting kernel under test
+		 * i.e. not for forced boot into default kernel.
+		 * Copy serialboot.log, if exists, into this folder.
 		 */
-		sh("cp ../${resultdir}/serialboot.log .");
+		def forcedboot = extras['forcedboot'];
+		if (!forcedboot) {
+			sh("cp ../${resultdir}/serialboot.log .");
+		}
 
 		def gittags = readFile "${results}/compile/gittags.properties";
 		gittags = gittags.replaceAll(/(?m)^\s*\n/, "");
@@ -383,7 +388,8 @@ def call(Map global, String boottest, String recipients) {
 				   "boottestRunner", repo, branch, config,
 				   overlay, resultdir,
 				   "${global.GUI_FAILURE_NOTIFICATION}",
-				   target, ["bootexception": true]);
+				   target, ["forcedboot": true,
+					    "bootexception": true]);
 		}
 	} catch (ForcedRebootException ex) {
 		/* do not fail on dut testkernel reboot failures */
@@ -394,7 +400,8 @@ def call(Map global, String boottest, String recipients) {
 				   "boottestRunner", repo, branch, config,
 				   overlay, resultdir,
 				   "${global.GUI_FAILURE_NOTIFICATION}",
-				   target, ["bootexception": false]);
+				   target, ["forcedboot": true,
+					   "bootexception": false]);
 		}
 	} catch (BoottestException ex) {
 		failed = true;
