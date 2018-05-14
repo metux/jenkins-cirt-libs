@@ -230,8 +230,6 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 
 	/* remember: config and overlay may contain slashes */
 	def kernelstash = "${config}_${overlay}".replaceAll('/','_');
-	config = null;
-	overlay = null;
 
 	dir(boottestdir) {
 		deleteDir();
@@ -287,11 +285,14 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 				throw ex;
 			} catch (RebootException ex) {
 				def repo = helper.getVar("GITREPO");
+				def branch = helper.getVar("BRANCH");
 				failnotify(global,
 					   "boottestRunner - Reboot of \"${target}\" failed",
-					   "boottestReboot", global, repo,
-					   branch, config, overlay, resultdir,
+					   "boottestReboot", repo, branch,
+					   config, overlay, resultdir,
 					   recipients, target);
+				/* act like junit and mark test as UNSTABLE but do not fail */
+				currentBuild.result = 'UNSTABLE';
 				forcedRebootDefault(hypervisor, target, seriallog_default, false);
 			}
 		}
