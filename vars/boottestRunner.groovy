@@ -39,7 +39,7 @@ class ForcedRebootAndBoottestException extends RuntimeException {
 }
 
 private rebootTarget(String hypervisor, String target, String seriallog,
-		     Boolean testboot, Boolean forced) {
+		     Boolean testboot, Boolean forced, Boolean regrtest) {
 	if (testboot && forced) {
 		error ("set testboot and forced in rebootTarget() is invalid");
 	}
@@ -95,13 +95,19 @@ echo $! >'''+""" ${pidfile}"""
 	 * force reboot only when booting into default kernel.
 	 */
 	println("Reboot Target ${target}");
+
+	/*
+	 * Do nothing to forced restart the target when
+	 * "REGRESSION_TEST_FORCED_REBOOT" is set in test description,
+	 * it is for regression test purpose only
+	 */
 	if (!forced) {
 		/*
 		 * Not forced reboot for testboot and after
 		 * successfull testboot
 		 */
 		sh "ssh ${target} \"sudo shutdown -r -t +1\"";
-	} else {
+	} else if (!regrtest) {
 		/*
 		 * Reboot into default kernel: If board didn't came up
 		 * properly, the reboot is forced. Sleep between
@@ -129,6 +135,11 @@ echo $! >'''+""" ${pidfile}"""
 		pidfile = null;
 		sh "kill ${pid}";
 	}
+}
+
+private rebootTarget(String hypervisor, String target, String seriallog,
+		     Boolean testboot, Boolean forced) {
+	rebootTarget(hypervisor, target, seriallog, testboot, forced, false);
 }
 
 private writeBootlog(String seriallog, String bootlog) {
@@ -205,10 +216,12 @@ private checkOnline(String target, Boolean testboot, Boolean forced) {
 }
 
 private forcedRebootDefault(String hypervisor, String target, String seriallog,
-			   Boolean bootexception) {
+			    Boolean bootexception, helper helper) {
 	println("Forced reboot into default kernel");
 	try {
-		rebootTarget(hypervisor, target, seriallog, false, true);
+		Boolean regrtest = helper.getVar("REGRESSION_TEST_FORCED_REBOOT", "false").toBoolean();
+
+		rebootTarget(hypervisor, target, seriallog, false, true, regrtest);
 		checkOnline(target, false, true);
 	} catch (ForcedRebootException ex) {
 		if (bootexception) {
@@ -281,7 +294,7 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 				rebootTarget(hypervisor, target, seriallog_default, false, false);
 				checkOnline(target, false, false);
 			} catch (BoottestException ex) {
-				forcedRebootDefault(hypervisor, target, seriallog_default, true);
+				forcedRebootDefault(hypervisor, target, seriallog_default, true, helper);
 				throw ex;
 			} catch (RebootException ex) {
 				def repo = helper.getVar("GITREPO");
@@ -293,7 +306,7 @@ private runner(Map global, helper helper, String boottest, String boottestdir, S
 					   recipients, target);
 				/* act like junit and mark test as UNSTABLE but do not fail */
 				currentBuild.result = 'UNSTABLE';
-				forcedRebootDefault(hypervisor, target, seriallog_default, false);
+				forcedRebootDefault(hypervisor, target, seriallog_default, false, helper);
 			}
 		}
 	}
