@@ -58,24 +58,27 @@ def call(String to, String subject, String templatename, String attachment,
 	}
 
 	node('master') {
-		if (attachment) {
-			unstash('attachment');
+		dir('notify') {
+			deleteDir();
+			if (attachment) {
+				unstash('attachment');
+			}
+
+			println("Send Email notification to ${to}");
+			println("Email template: ${templatename}");
+
+			variables << env.getEnvironment();
+			variables['GIT_URL'] = env.GIT_URL;
+			variables['GIT_COMMIT'] = env.GIT_COMMIT;
+
+			def template = libraryResource("de/linutronix/cirt/email/${templatename}.txt");
+			def body = renderTemplate(template, variables);
+			subject = prepareSubject(subject);
+
+			emailext(subject: subject, body: body, attachLog: log,
+				 attachmentsPattern: attachment,
+				 mimeType: "text/plain", to: to);
 		}
-
-		println("Send Email notification to ${to}");
-		println("Email template: ${templatename}");
-
-		variables << env.getEnvironment();
-		variables['GIT_URL'] = env.GIT_URL;
-		variables['GIT_COMMIT'] = env.GIT_COMMIT;
-
-		def template = libraryResource("de/linutronix/cirt/email/${templatename}.txt");
-		def body = renderTemplate(template, variables);
-		subject = prepareSubject(subject);
-
-		emailext(subject: subject, body: body, attachLog: log,
-			 attachmentsPattern: attachment,
-			 mimeType: "text/plain", to: to);
 	}
 }
 
