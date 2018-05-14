@@ -12,9 +12,9 @@ import de.linutronix.cirt.inputcheck;
 def call(body) {
 	def recipients;
 	// evaluate the body block, and collect configuration into the object
-	def global = [:]
+	def presets = [:]
 	body.resolveStrategy = Closure.DELEGATE_FIRST
-	body.delegate = global
+	body.delegate = presets
 	body()
 
 	pipeline {
@@ -25,13 +25,13 @@ def call(body) {
 		}
 
 		parameters {
-			string(defaultValue: "${global.STASH_PATCHES ?: 'patches'}", description: '', name: 'STASH_PATCHES')
-			string(defaultValue: "${global.STASH_PRODENV ?: 'prodenv'}", description: '', name: 'STASH_PRODENV')
-			string(defaultValue: "${global.STASH_RAWENV ?: 'rawenvironment'}", description: '', name: 'STASH_RAWENV')
-			string(defaultValue: "${global.STASH_COMPILECONF ?: 'compileconf'}", description: '', name: 'STASH_COMPILECONF')
-			string(defaultValue: "${global.GUI_DB_HOSTNAME ?: 'localhost:5432'}", description: 'Hostname of database', name: 'GUI_DB_HOSTNAME')
-			string(defaultValue: "${global.GUI_COMMIT ?: ''}", description: '', name: 'GUI_COMMIT')
-			string(defaultValue: "${global.GUI_FAILURE_NOTIFICATION}", description: 'Notify in case of test system failure', name: 'GUI_FAILURE_NOTIFICATION')
+			string(defaultValue: "${presets.STASH_PATCHES ?: 'patches'}", description: '', name: 'STASH_PATCHES')
+			string(defaultValue: "${presets.STASH_PRODENV ?: 'prodenv'}", description: '', name: 'STASH_PRODENV')
+			string(defaultValue: "${presets.STASH_RAWENV ?: 'rawenvironment'}", description: '', name: 'STASH_RAWENV')
+			string(defaultValue: "${presets.STASH_COMPILECONF ?: 'compileconf'}", description: '', name: 'STASH_COMPILECONF')
+			string(defaultValue: "${presets.GUI_DB_HOSTNAME ?: 'localhost:5432'}", description: 'Hostname of database', name: 'GUI_DB_HOSTNAME')
+			string(defaultValue: "${presets.GUI_COMMIT ?: ''}", description: '', name: 'GUI_COMMIT')
+			string(defaultValue: "${presets.GUI_FAILURE_NOTIFICATION}", description: 'Notify in case of test system failure', name: 'GUI_FAILURE_NOTIFICATION')
 		}
 
 		stages {
