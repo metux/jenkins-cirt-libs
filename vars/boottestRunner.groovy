@@ -377,23 +377,23 @@ def call(Map global, String boottest, String recipients) {
 		}
 	} catch (ForcedRebootAndBoottestException ex) {
 		failed = true;
-		if (params.GUI_FAILURE_NOTIFICATION) {
+		if (global.GUI_FAILURE_NOTIFICATION) {
 			failnotify(global,
 				   "Forced reboot of \"${target}\" failed",
 				   "boottestRunner", repo, branch, config,
 				   overlay, resultdir,
-				   "${params.GUI_FAILURE_NOTIFICATION}",
+				   "${global.GUI_FAILURE_NOTIFICATION}",
 				   target, ["bootexception": true]);
 		}
 	} catch (ForcedRebootException ex) {
 		/* do not fail on dut testkernel reboot failures */
 		failed = false;
-		if (params.GUI_FAILURE_NOTIFICATION) {
+		if (global.GUI_FAILURE_NOTIFICATION) {
 			failnotify(global,
 				   "Forced reboot of \"${target}\" failed",
 				   "boottestRunner", repo, branch, config,
 				   overlay, resultdir,
-				   "${params.GUI_FAILURE_NOTIFICATION}",
+				   "${global.GUI_FAILURE_NOTIFICATION}",
 				   target, ["bootexception": false]);
 		}
 	} catch (BoottestException ex) {
@@ -407,7 +407,7 @@ def call(Map global, String boottest, String recipients) {
 			   "On/Offline problem with target: ${target}",
 			   "offlineTarget", repo, branch, config,
 			   overlay, resultdir,
-			   "${params.GUI_FAILURE_NOTIFICATION} ${recipients}",
+			   "${global.GUI_FAILURE_NOTIFICATION} ${recipients}",
 			   target);
 		/* act like junit and mark test as UNSTABLE */
 		currentBuild.result = 'UNSTABLE';
