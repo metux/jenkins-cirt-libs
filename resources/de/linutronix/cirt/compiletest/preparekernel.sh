@@ -4,6 +4,14 @@
 
 # Prepare Kernel Config
 # abort skript on error
+#
+# Exit status 0 on success
+# Exit status 1 on a usage error
+# Exit status 2 when overlayfile is not available
+# Exit status 3 when CONFIG option is not set properly
+#
+# Detailed information about the error reason is printed to stdout
+
 set -e
 
 if [ $# -ne 5 ]
@@ -30,8 +38,8 @@ oscript=$RESULT_DIR/overlayscript
 handle_overlay() {
 	if [ ! -f $OVERLAYFILE ]
 	then
-		echo "error: overlay $OVERLAY not found"
-		return 1
+		echo "fatal error: overlay $OVERLAY not found"
+		exit 2
 	fi
 
 	# if arch overlay file exist use both overlays files and
@@ -72,7 +80,8 @@ handle_overlay() {
 	make ARCH=$ARCH O=$BUILD_DIR olddefconfig
 
 	# Check if all parameters were set properly, set err=1 if a option
-	# was not set abort script after all parameters were checked.
+	# was not set abort script with exit code 3 after all parameters
+	# were checked.
 	err=0
 	while read line
 	do
@@ -114,7 +123,7 @@ handle_overlay() {
 
 	if [[ $err -eq 1 ]]
 	then
-		return 1
+		exit 3
 	fi
 	return 0
 }
