@@ -9,6 +9,53 @@ import de.linutronix.cirt.VarNotSetException;
 import de.linutronix.cirt.inputcheck;
 import java.io.File;
 
+class OverlayNotSetException extends RuntimeException {
+	OverlayNotSetException (String message) {
+		super(message);
+	}
+}
+
+private prepare_config(Map global, String repo, String branch,
+		       String config, String overlay,
+		       String resultdir, String builddir) {
+	def prepconfig = libraryResource('de/linutronix/cirt/compiletest/preparekernel.sh');
+	writeFile file:"prepconfig.sh", text:prepconfig;
+	prepconfig = null;
+
+	/*
+	 * start with #!/bin/bash to circumvent Jenkins default shell
+	 * options "-xe". Otherwise stderr is poluted with confusing
+	 * shell trace output and bedevil the user notification.
+	 */
+	def prepscript = "#!/bin/bash\n. prepconfig.sh ${config} ${overlay} ${resultdir} ${builddir} ${env.BUILD_NUMBER} 2>prepconfig_stderr.log";
+
+	/*
+	 * prepconfig.sh returns:
+	 * 0 on success
+	 * 1 on a usage error
+	 * 2 when overlayfile is not available
+	 * 3 when CONFIG option is not set properly
+	 */
+	def ret = sh(script: prepscript, returnStatus: true);
+	def prep_stderr = readFile("prepconfig_stderr.log").trim();
+
+	switch(ret) {
+	case 0:
+		break;
+	case 1:
+		error("Usage error of prepconfig.sh: " + prep_stderr);
+		break;
+	case 2:
+		/* fall through */
+	case 3:
+		/* act like junit and mark test as UNSTABLE */
+		currentBuild.result = 'UNSTABLE';
+		throw new OverlayNotSetException(prep_stderr);
+	default:
+		error("Unknown abort in prepconfig.sh");
+	}
+}
+
 private runner(Map global, String repo, String branch,
 	       String config, String overlay) {
 	println("${repo} ${branch} ${config} ${overlay}");
@@ -74,10 +121,8 @@ private runner(Map global, String repo, String branch,
 				sh '''touch .config''';
 			}
 
-			def prepconfig = libraryResource('de/linutronix/cirt/compiletest/preparekernel.sh');
-			writeFile file:"prepconfig.sh", text:prepconfig;
-			prepconfig = null;
-			sh ". prepconfig.sh ${config} ${overlay} ${resultdir} ${builddir} ${env.BUILD_NUMBER}";
+			prepare_config(global, repo, branch, config, overlay,
+				       resultdir, builddir);
 
 			/*
 			 * Use environment file and add an "export " at the
@@ -250,6 +295,12 @@ def call(Map global, String repo, String branch,
 				   null);
 		}
 		return result;
+	} catch(OverlayNotSetException ex) {
+		failnotify(global, repo, branch, config, overlay, recipients,
+			   "compiletest-runner failed! Overlay not set properly",
+			   "", ex.getMessage());
+
+		return 'UNSTABLE';
 	} catch(Exception ex) {
 		if (ex instanceof VarNotSetException) {
                         throw ex;
