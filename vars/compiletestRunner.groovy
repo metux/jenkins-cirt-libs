@@ -180,7 +180,7 @@ fi
 
 private failnotify(Map global, String repo, String branch, String config,
 		   String overlay, String recipients, String subject,
-		   String attachment)
+		   String attachment, String overlayerrors)
 {
 	dir("failurenotification") {
 		deleteDir();
@@ -190,6 +190,9 @@ private failnotify(Map global, String repo, String branch, String config,
 
 		def gittags = readFile "${results}/compile/gittags.properties";
 		gittags = gittags.replaceAll(/(?m)^\s*\n/, "");
+		if (!overlayerrors?.trim()) {
+			overlayerrors = "";
+		}
 
 		notify("${recipients}",
 		       "${subject}",
@@ -199,7 +202,8 @@ private failnotify(Map global, String repo, String branch, String config,
 		       ["global": global, "repo": repo,
 			"branch": branch, "config": config,
 			"overlay": overlay,
-			"gittags": gittags]);
+			"gittags": gittags,
+			"overlayerrors": overlayerrors]);
 	}
 }
 
@@ -242,7 +246,8 @@ def call(Map global, String repo, String branch,
 
 			failnotify(global, repo, branch, config, overlay, recipients,
 				   "compiletest-runner failed! (total: \${WARNINGS_COUNT})",
-				   "${results}/compile/compile.log,${results}/compile/package.log,${results}/compile/config");
+				   "${results}/compile/compile.log,${results}/compile/package.log,${results}/compile/config",
+				   null);
 		}
 		return result;
 	} catch(Exception ex) {
