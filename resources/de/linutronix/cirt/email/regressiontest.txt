@@ -1,0 +1,11 @@
+<%-- SPDX-License-Identifier: MIT --%>
+<%-- Copyright (c) 2018 Linutronix GmbH --%>
+Build #${BUILD_NUMBER} has regression tests enabled!
+
+CI-RT test: ${BRANCH_NAME} #${BUILD_NUMBER}
+${BUILD_URL}
+
+
+Content of env/regression-test:
+
+${regressionenv}

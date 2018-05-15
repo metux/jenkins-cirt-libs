@@ -8,6 +8,23 @@
 import de.linutronix.cirt.inputcheck;
 import de.linutronix.lib4lib.safesplit;
 
+@NonCPS
+private getRegrtestList(String globalenv) {
+	def regrenv = globalenv =~ /\s*REGRESSION_TEST_[A-Z_]*=.*/
+	def enabled = false;
+	def list = "";
+
+	regrenv.each { regr ->
+		def val = safesplit.split(regr, '=').last();
+		if (val.toBoolean()) {
+			enabled = true;
+			list += "${regr}";
+		}
+	}
+
+	return [ list, enabled ];
+}
+
 private String readCleanFile(String filename) {
 	def content = readFile(filename);
 
@@ -286,16 +303,37 @@ private buildEnv(String commit) {
 	return globalenv;
 }
 
+private notifyRegrtest(String recipients, String globalenv) {
+	def enabled = false;
+	def list = "";
+
+	(list, enabled) = getRegrtestList(globalenv)
+
+        if (!enabled)
+                return;
+
+	notify("${recipients}",
+	       "Regression test enabled!",
+	       "regressiontest",
+	       null, false,
+	       ["regressionenv": list]);
+}
+
 def call(String commit, Map global) {
 	inputcheck.check(global);
 	try {
 		node('master') {
 			def globalenv;
+			def recipients;
 			dir('environment') {
 				deleteDir();
 				unstash(global.STASH_RAWENV);
 
 				globalenv = buildEnv(commit);
+
+				recipients = getValue(globalenv, "RECIPIENTS");
+
+				notifyRegrtest(recipients, globalenv);
 
 				/*
 				 * Stash *.properties files; directory
@@ -312,7 +350,7 @@ def call(String commit, Map global) {
 			archiveArtifacts(artifacts: 'environment/**/*.properties, environment/patches/**, environment/compile/configs/**, environment/compile/overlays/**',
 					 fingerprint: true);
 
-			return getValue(globalenv, "RECIPIENTS")
+			return recipients;
 		}
 	} catch(Exception ex) {
 		println("CIRTbuildenv failed:");
