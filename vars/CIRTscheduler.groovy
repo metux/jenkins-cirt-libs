@@ -90,6 +90,7 @@ def call(body) {
 							       null,
 							       false,
 							       ["failureText": ex.toString()]);
+							currentBuild.result = 'UNSTABLE';
 						} catch(Exception ex) {
 							println("compiletest failed:");
 							println(ex.toString());

@@ -118,6 +118,7 @@ def call(Map global, String target, String[] cyclictests, String recipients) {
 		       null,
 		       false,
 		       ["failureText": ex.toString()]);
+		currentBuild.result = 'UNSTABLE';
 	} catch(Exception ex) {
                 println("cyclictest on ${target} failed:");
                 println(ex.toString());
