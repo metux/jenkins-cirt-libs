@@ -53,8 +53,8 @@ handle_overlay() {
 		return 0
 	fi
 
-	# overlay is applied with scripts/config; script begin is stored in $oscript
-	# use $tovr for enable, disable, module and set-val option
+	# overlay is applied with scripts/config; script begin is stored in
+	# $oscript; use $tovr for enable, disable, module and set-val option.
 
 	grep "# CONFIG_.* is not set" $tovr | sed -e 's@^# CONFIG_\([^ ]*\).*@--disable \1 \\@' >> $oscript
 
@@ -67,11 +67,12 @@ handle_overlay() {
 	chmod a+x $oscript
 	./$oscript
 
-	# use olddefconfig instead of oldconfig to avoid failures due to new konfig variables
+	# use olddefconfig instead of oldconfig to avoid failures due to new
+	# konfig variables.
 	make ARCH=$ARCH O=$BUILD_DIR olddefconfig
 
-	# Check if all parameters were set propertly, set err=1 if a option was not set
-	# abort script after all parameters were checked
+	# Check if all parameters were set properly, set err=1 if a option
+	# was not set abort script after all parameters were checked.
 	err=0
 	while read line
 	do
@@ -81,7 +82,7 @@ handle_overlay() {
 			"# CONFIG_"*" is not set")
 				if [[ $ret != "undef" ]] && [[ $ret != "n" ]]
 				then
-					echo $line" was not set propertly"
+					echo $line" was not set properly"
 					err=1
 				fi
 				;;
@@ -91,7 +92,7 @@ handle_overlay() {
 				echo $ret
 				if [[ $ret != "y" ]] && [[ $ret != "m" ]]
 				then
-					echo $line" was not set propertly"
+					echo $line" was not set properly"
 					err=1
 				fi
 				;;
@@ -99,7 +100,7 @@ handle_overlay() {
 				val=$(echo $line | sed -e 's@^CONFIG_.*=\([0-9\"]\+\).*@\1@')
 				if [[ $ret != $val ]]
 				then
-					echo $line" was not set propertly ("$ret" instead of "$val")"
+					echo $line" was not set properly ("$ret" instead of "$val")"
 					err=1
 				fi
 				;;
