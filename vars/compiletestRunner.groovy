@@ -179,7 +179,8 @@ fi
 }
 
 private failnotify(Map global, String repo, String branch, String config,
-		   String overlay, String recipients)
+		   String overlay, String recipients, String subject,
+		   String attachment)
 {
 	dir("failurenotification") {
 		deleteDir();
@@ -191,9 +192,9 @@ private failnotify(Map global, String repo, String branch, String config,
 		gittags = gittags.replaceAll(/(?m)^\s*\n/, "");
 
 		notify("${recipients}",
-		       "compiletest-runner failed! (total: \${WARNINGS_COUNT})",
+		       "${subject}",
 		       "compiletestRunner",
-		       "${results}/compile/compile.log,${results}/compile/package.log,${results}/compile/config",
+		       "${attachment}",
 		       false,
 		       ["global": global, "repo": repo,
 			"branch": branch, "config": config,
@@ -237,8 +238,11 @@ def call(Map global, String repo, String branch,
 		}
 
 		if (result == 'UNSTABLE') {
-			failnotify(global, repo, branch, config,
-				   overlay, recipients);
+			def results = "results/${config}/${overlay}";
+
+			failnotify(global, repo, branch, config, overlay, recipients,
+				   "compiletest-runner failed! (total: \${WARNINGS_COUNT})",
+				   "${results}/compile/compile.log,${results}/compile/package.log,${results}/compile/config");
 		}
 		return result;
 	} catch(Exception ex) {
