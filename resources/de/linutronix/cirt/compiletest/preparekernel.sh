@@ -91,7 +91,7 @@ handle_overlay() {
 			"# CONFIG_"*" is not set")
 				if [[ $ret != "undef" ]] && [[ $ret != "n" ]]
 				then
-					echo $line" was not set properly"
+					echo "${line} was not set properly (it should be \"is not set\", but is \"${ret}\")" >&2
 					err=1
 				fi
 				;;
@@ -101,7 +101,7 @@ handle_overlay() {
 				echo $ret
 				if [[ $ret != "y" ]] && [[ $ret != "m" ]]
 				then
-					echo $line" was not set properly"
+					echo "${line} was not set properly (it should be \"y\" or \"m\", but is \"${ret}\")" >&2
 					err=1
 				fi
 				;;
@@ -109,12 +109,12 @@ handle_overlay() {
 				val=$(echo $line | sed -e 's@^CONFIG_.*=\([0-9\"]\+\).*@\1@')
 				if [[ $ret != $val ]]
 				then
-					echo $line" was not set properly ("$ret" instead of "$val")"
+					echo "${line} was not set properly (${ret} instead of ${val})" >&2
 					err=1
 				fi
 				;;
 			*)
-				echo "Please check unknown option: "$line
+				echo "Please check unknown option: ${line}" >&2
 				err=1
 				;;
 		esac
