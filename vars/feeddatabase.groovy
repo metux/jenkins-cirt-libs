@@ -94,7 +94,7 @@ def runPythonScript(firstRun, lastRun, unstashDir, compiledir, helper, config, o
 		--git_branch ${env.GIT_BRANCH}\
 		--git_commit ${env.GIT_COMMIT}\
 		--gitrepo ${helper.getVar('GITREPO')}\
-		--publicrepo ${helper.getVar('PUBLICREPO', " ")}\
+		--publicrepo ${helper.getVar('PUBLICREPO')}\
 		--httprepo ${helper.getVar('HTTPREPO', " ")}\
 		--tags_commit ${helper.getVar('TAGS_COMMIT')}\
 		--tags_name ${helper.getVar('TAGS_NAME')}\
