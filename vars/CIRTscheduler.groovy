@@ -115,6 +115,14 @@ def call(body) {
 						script {
 							try {
 								feeddatabase(params);
+							} catch(VarNotSetException ex) {
+								notify("${recipients}",
+								       "Testdescription is not valid",
+								       "invalidDescr",
+								       null,
+								       false,
+								       ["failureText": ex.toString()]);
+								currentBuild.result = 'UNSTABLE';
 							} catch(Exception ex) {
 								println("feeddatabase failed:");
 								println(ex.toString());
