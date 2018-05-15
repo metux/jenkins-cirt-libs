@@ -24,18 +24,34 @@ def collectCompiletests(configs, overlays, unstashDir, helper) {
 	for (int i = 0; i < configs.size(); i++) {
 		config = configs.getAt(i);
 		for (int j = 0; j < overlays.size(); j++) {
+			/*
+			 * continue does not work out in inner closures like
+			 * dir, try/catch, etc.
+			 * Work around with skip flag.
+			 */
+			def skip = false;
 			overlay = overlays.getAt(j);
 			compiledir = "results/${config}/${overlay}";
-			dir(unstashDir) {
-				try {
+			try {
+				dir(unstashDir) {
 					unstash(compiledir.replaceAll('/','_'));
-				} catch (AbortException ex) {
-					/* catch non existing stash */
-					println("Feeddatabase Info only: "+ex.toString());
-					println("Feeddatabase Info only: "+ex.getMessage());
-					continue;
 				}
+			} catch (AbortException ex) {
+				/* catch non existing stash */
+				println("Feeddatabase Info only: "+ex.toString());
+				println("Feeddatabase Info only: "+ex.getMessage());
+				skip = true;
+			}
 
+			/*
+			 * Jenkins is not capable to handle continue inside
+			 * of a catch closure. Workaround with skip flag.
+			 */
+			if (skip) {
+				continue;
+			}
+
+			dir(unstashDir) {
 				String gittagsprop = compiledir + "/compile/gittags.properties";
 				String[] properties = [gittagsprop]
 				helper.add2environment(properties);
@@ -116,6 +132,7 @@ def collectBoottests(config, overlay, helper) {
 
 		def boottests = safesplit.split(helper.getVar("BOOTTESTS", " "));
 		for (int k = 0; k < boottests?.size(); k++) {
+			def skip = false;
 			boottest = boottests.getAt(k)
 			try {
 				unstash(boottest.replaceAll('/','_'));
@@ -123,8 +140,17 @@ def collectBoottests(config, overlay, helper) {
 				/* catch non existing stash */
 				println("Feeddatabase Info only: "+ex.toString());
 				println("Feeddatabase Info only: "+ex.getMessage());
+				skip = true;
+			}
+
+			/*
+			 * Jenkins is not capable to handle continue inside
+			 * of a catch closure. Workaround with skip flag.
+			 */
+			if (skip) {
 				continue;
 			}
+
 			properties = ["../${boottest}.properties"];
 			helper.add2environment(properties);
 
