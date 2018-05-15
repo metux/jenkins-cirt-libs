@@ -119,9 +119,6 @@ def call(Map global, String target, String[] cyclictests, String recipients) {
 		       false,
 		       ["failureText": ex.toString()]);
 	} catch(Exception ex) {
-		if (ex instanceof VarNotSetException) {
-                        throw ex;
-                }
                 println("cyclictest on ${target} failed:");
                 println(ex.toString());
                 println(ex.getMessage());
