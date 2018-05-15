@@ -24,69 +24,73 @@ private runner(Map global, String repo, String branch,
 
 	def result = '';
 
-	dir(compiledir) {
-		deleteDir();
-		/*
-		 * Specify a depth of 1. If last commit is no tag "git
-		 * describe HEAD" will not work. Fetching the whole
-		 * history precautionary, takes a lot of time and is
-		 * not required when the last commit is a
-		 * tag. Fetching the required history is done before
-		 * writing the gittags.properties file when required
-		 * (see comment below as well).
-		 */
-		checkout([$class: 'GitSCM', branches: [[name: "${branch}"]],
-			  doGenerateSubmoduleConfigurations: false,
-			  extensions: [[$class: 'CloneOption',
-					depth: 1, noTags: false,
-					reference: '/home/mirror/kernel',
-					shallow: true, timeout: 60]],
-			  submoduleCfg: [], userRemoteConfigs: [[url: "${repo}"]]]);
-
-		dir(".env") {
-			unstash(global.STASH_PRODENV);
-			unstash(global.STASH_COMPILECONF);
-		}
-
-		/* Unstash and apply test-description patch queue */
-		unstash(global.STASH_PATCHES);
-		sh("if [ -d patches ] ; then quilt push -a ; fi");
-
-		/* Extract gittag information for db entry */
-		dir(resultdir) {
+	try {
+		dir(compiledir) {
+			deleteDir();
 			/*
-			 * When "git describe HEAD" does not work more
-			 * history depth is required; it is possible
-			 * as well to "unshallow" the git repository.
+			 * Specify a depth of 1. If last commit is no tag "git
+			 * describe HEAD" will not work. Fetching the whole
+			 * history precautionary, takes a lot of time and is
+			 * not required when the last commit is a
+			 * tag. Fetching the required history is done before
+			 * writing the gittags.properties file when required
+			 * (see comment below as well).
 			 */
-			sh 'git describe HEAD || git fetch --depth 1000';
-			sh """echo "TAGS_COMMIT=\$(git rev-parse HEAD)" >> gittags.properties""";
-			sh """echo "TAGS_NAME=\$(git describe HEAD)" >> gittags.properties""";
-		}
+			checkout([$class: 'GitSCM', branches: [[name: "${branch}"]],
+				  doGenerateSubmoduleConfigurations: false,
+				  extensions: [[$class: 'CloneOption',
+						depth: 1, noTags: false,
+						reference: '/home/mirror/kernel',
+						shallow: true, timeout: 60]],
+				  submoduleCfg: [], userRemoteConfigs: [[url: "${repo}"]]]);
 
-		/* Create builddir and create empty .config */
-		/* TODO: better solution for an empty builddir (new File(NAME).mkdir())? */
-		dir(builddir) {
-			sh '''touch .config''';
-		}
+			dir(".env") {
+				unstash(global.STASH_PRODENV);
+				unstash(global.STASH_COMPILECONF);
+			}
 
-		def prepconfig = libraryResource('de/linutronix/cirt/compiletest/preparekernel.sh');
-		writeFile file:"prepconfig.sh", text:prepconfig;
-		prepconfig = null;
-		sh ". prepconfig.sh ${config} ${overlay} ${resultdir} ${builddir} ${env.BUILD_NUMBER}";
+			/* Unstash and apply test-description patch queue */
+			unstash(global.STASH_PATCHES);
+			sh("if [ -d patches ] ; then quilt push -a ; fi");
 
-		/*
-		 * Use environment file and add an "export " at the
-		 * begin of every line, to be includable in compile
-		 * bash script; remove empty lines before adding
-		 * "export ".
-		 */
-		def exports = readFile ".env/compile/env/${arch}.properties";
-		exports = exports.replaceAll(/(?m)^\s*\n/, "");
-		exports = exports.replaceAll(/(?m)^/, "export ");
-		arch = null;
+			/* Extract gittag information for db entry */
+			dir(resultdir) {
+				/*
+				 * When "git describe HEAD" does not work more
+				 * history depth is required; it is possible
+				 * as well to "unshallow" the git repository.
+				 */
+				sh 'git describe HEAD || git fetch --depth 1000';
+				sh """echo "TAGS_COMMIT=\$(git rev-parse HEAD)" >> gittags.properties""";
+				sh """echo "TAGS_NAME=\$(git describe HEAD)" >> gittags.properties""";
+			}
 
-		def script_content = """#!/bin/bash -x
+			/*
+			 * Create builddir and create empty .config
+			 * TODO: better solution for an empty
+			 * builddir(new File(NAME).mkdir())?
+			 */
+			dir(builddir) {
+				sh '''touch .config''';
+			}
+
+			def prepconfig = libraryResource('de/linutronix/cirt/compiletest/preparekernel.sh');
+			writeFile file:"prepconfig.sh", text:prepconfig;
+			prepconfig = null;
+			sh ". prepconfig.sh ${config} ${overlay} ${resultdir} ${builddir} ${env.BUILD_NUMBER}";
+
+			/*
+			 * Use environment file and add an "export " at the
+			 * begin of every line, to be includable in compile
+			 * bash script; remove empty lines before adding
+			 * "export ".
+			 */
+			def exports = readFile ".env/compile/env/${arch}.properties";
+			exports = exports.replaceAll(/(?m)^\s*\n/, "");
+			exports = exports.replaceAll(/(?m)^/, "export ");
+			arch = null;
+
+			def script_content = """#!/bin/bash -x
 
 # Abort build script if there was an error executing the commands
 set -e
@@ -145,29 +149,32 @@ then
 fi
 ''';
 
-		writeFile file:"${resultdir}/compile-script.sh", text:script_content;
-		exports = null;
-		script_content = null;
-		result = shunit("compile", "${config}/${overlay}",
-				"bash ${resultdir}/compile-script.sh");
-		sh("mv pyjutest.xml ${resultdir}/");
-		stash(name: linuximage,
-		      excludes: "**/*-dbg_*",
-		      includes: "${resultdir}/linux-image*deb, ${resultdir}/dtbs-${env.BUILD_NUMBER}.tar.xz",
+			writeFile file:"${resultdir}/compile-script.sh",
+				 text:script_content;
+			exports = null;
+			script_content = null;
+			result = shunit("compile", "${config}/${overlay}",
+					"bash ${resultdir}/compile-script.sh");
+			sh("mv pyjutest.xml ${resultdir}/");
+			stash(name: linuximage,
+			      excludes: "**/*-dbg_*",
+			      includes: "${resultdir}/linux-image*deb, ${resultdir}/dtbs-${env.BUILD_NUMBER}.tar.xz",
+			      allowEmpty: true);
+			linuximage = null;
+		}
+	} finally {
+		archiveArtifacts(artifacts: "${compiledir}/${resultdir}/**",
+				 fingerprint: true);
+		stash(name: compiledir.replaceAll('/','_'),
+		      includes: "${compiledir}/${resultdir}/pyjutest.xml, " +
+		      "${compiledir}/${resultdir}/compile-script.sh, " +
+		      "${compiledir}/${resultdir}/gittags.properties, " +
+		      "${compiledir}/${resultdir}/package.log, " +
+		      "${compiledir}/${resultdir}/config, " +
+		      "${compiledir}/${resultdir}/compile.log, " +
+		      "${compiledir}/${builddir}/defconfig",
 		      allowEmpty: true);
-		linuximage = null;
 	}
-	archiveArtifacts(artifacts: "${compiledir}/${resultdir}/**",
-			 fingerprint: true);
-	stash(name: compiledir.replaceAll('/','_'),
-	      includes: "${compiledir}/${resultdir}/pyjutest.xml, " +
-			"${compiledir}/${resultdir}/compile-script.sh, " +
-			"${compiledir}/${resultdir}/gittags.properties, " +
-			"${compiledir}/${resultdir}/package.log, " +
-			"${compiledir}/${resultdir}/config, " +
-			"${compiledir}/${resultdir}/compile.log, " +
-			"${compiledir}/${builddir}/defconfig",
-	      allowEmpty: true);
 	return result;
 }
 
