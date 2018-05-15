@@ -42,8 +42,32 @@ def collectCompiletests(configs, overlays, unstashDir, helper) {
 
 				collectBoottests(config, overlay, helper);
 				lastRun = (i == configs.size() - 1 && j == overlays.size() - 1);
-				runPythonScript(firstRun, lastRun, unstashDir, compiledir, helper, config, overlay);
-				firstRun = false
+
+				/*
+				 * compiletest may fail in configuration phase
+				 * and therefore some files like compile
+				 * script or defconfig do not exist.
+				 * Skip feed database for now, until the
+				 * python script fill up some good defaults
+				 * for mandatory database row values.
+				 * pyjutest.xml is the last created file in
+				 * a compile test, test for it to decide
+				 * whether database feeding needs to be done.
+				 *
+				 * Skiping stash do not work here since some
+				 * information files like gittas.properties
+				 * are needed in user notification.
+				 */
+				if (fileExists(compiledir + "/compile/pyjutest.xml")) {
+					runPythonScript(firstRun, lastRun,
+							unstashDir, compiledir,
+							helper, config,
+							overlay);
+					firstRun = false
+				} else {
+					println("Feeddatabase Info only: No JUnit result file exist for ${config}/${overlay}");
+					println("Feeddatabase Info only: Skip database feed.");
+				}
 			}
 		}
 	}
