@@ -15,7 +15,7 @@ private failnotify(Map global, helper h, String target,
 	def loadgen = h.getVar("LOADGEN", " ").trim();
 	def interval = h.getVar("INTERVAL");
 	def limit = h.getVar("LIMIT");
-	def repo = h.getVar("GITREPO", " ");
+	def repo = h.getVar("GITREPO");
 	def branch = h.getVar("BRANCH");
 	def config = h.getVar("CONFIG");
 	def overlay = h.getVar("OVERLAY");
