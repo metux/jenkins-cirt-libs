@@ -326,13 +326,13 @@ private failnotify(Map global, String subject, String template, String repo,
 		/*
 		 * Specifying a relative path starting with "../" does not
 		 * work in notify attachments.
-		 * serialboot.log only exists for booting kernel under test
+		 * boot.log only exists for booting kernel under test
 		 * i.e. not for forced boot into default kernel.
-		 * Copy serialboot.log, if exists, into this folder.
+		 * Copy boot.log, if exists, into this folder.
 		 */
 		def forcedboot = extras['forcedboot'];
 		if (!forcedboot) {
-			sh("cp ../${resultdir}/serialboot.log .");
+			sh("cp ../${resultdir}/boot.log .");
 		}
 
 		def gittags = readFile "${results}/compile/gittags.properties";
@@ -341,7 +341,7 @@ private failnotify(Map global, String subject, String template, String repo,
 		notify("${recipients}",
 		       "${subject}",
 		       "${template}",
-		       "serialboot.log,${results}/compile/config",
+		       "boot.log,${results}/compile/config",
 		       false,
 		       ["global": global, "repo": repo,
 			"branch": branch, "config": config,
@@ -464,18 +464,28 @@ def call(Map global, String boottest, String recipients) {
 			def script_content = libraryResource('de/linutronix/cirt/boottest/boottest2xml.py');
 			writeFile file:"boottest2xml", text:script_content;
 			script_content = null;
+
+			/*
+			 * Do not stash boot log on boot failures:
+			 * boot.log is not filtered and flood the
+			 * warnings plugin with new bootlog entries for
+			 * no value. Contrary information may got loss
+			 * in the chatter.
+			 */
+			def attachments = "${resultdir}/pyjutest.xml, " +
+				"${resultdir}/cmdline";
+
 			if (failed) {
 				sh("python3 boottest2xml ${boottest} ${boottestdir} failure")
 			} else {
 				sh("python3 boottest2xml ${boottest} ${boottestdir}")
+				attachments = "${attachments}, ${resultdir}/boot.log";
 			}
 
 			archiveArtifacts(artifacts: "${resultdir}/**",
 					 fingerprint: true);
 			stash(name: boottest.replaceAll('/','_'),
-			      includes: "${resultdir}/pyjutest.xml, " +
-			      "${resultdir}/cmdline, " +
-			      "${resultdir}/boot.log");
+			      includes: attachments);
 
 			junit("${resultdir}/pyjutest.xml");
 
