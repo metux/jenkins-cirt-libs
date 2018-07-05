@@ -6,6 +6,7 @@
  */
 
 import de.linutronix.cirt.inputcheck;
+import de.linutronix.lib4lib.safesplit;
 import java.io.File;
 
 class OverlayNotSetException extends RuntimeException {
@@ -66,7 +67,7 @@ private runner(Map global, String repo, String branch,
 	def resultdir = "compile";
 	def builddir = "build";
 	def linuximage = "${config}/${overlay}".replaceAll('/','_');
-	def arch = config.split("/")[0];
+	def arch = safesplit.split(config, "/")[0];
 
 	def result = '';
 

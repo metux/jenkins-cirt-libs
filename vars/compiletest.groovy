@@ -115,8 +115,8 @@ def call(Map global) {
 
 			h.add2environment(properties);
 
-			configs = h.getVar('CONFIGS').split();
-			overlays = h.getVar('OVERLAYS').split();
+			configs = safesplit.split(h.getVar('CONFIGS'));
+			overlays = safesplit.split(h.getVar('OVERLAYS'));
 			gitrepo = h.getVar('GITREPO');
 			gitcheckout = h.getVar('GIT_CHECKOUT');
 			recipients = h.getVar('RECIPIENTS');
