@@ -20,9 +20,9 @@ def call(body) {
 	pipeline {
 		agent any;
 
-		options {
-			timestamps()
-		}
+//		options {
+//			timestamps()
+//		}
 
 		parameters {
 			string(defaultValue: "${presets.STASH_PATCHES ?: 'patches'}", description: '', name: 'STASH_PATCHES')
